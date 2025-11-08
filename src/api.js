@@ -1,5 +1,5 @@
 // frontend/src/api.js
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://devsite-backend-production.up.railway.app:8080';
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://devsite-backend-production.up.railway.app';
 
 function authHeaders() {
   const token = localStorage.getItem('token');
