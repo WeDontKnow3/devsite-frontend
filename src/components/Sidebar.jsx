@@ -107,10 +107,10 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
 
       <aside className={`sidebar ${open ? 'open' : 'closed'}`} aria-expanded={open}>
         <div className="sidebar-top">
-          <div className="logo">RC</div>
+          <div className="logo">CS</div>
           <div className="sidebar-title">
-            <div className="header-title">Rugplicate</div>
-            <div className="header-sub">by zt01</div>
+            <div className="header-title">CoinSim</div>
+            <div className="header-sub">AMM Simulator</div>
           </div>
         </div>
 
@@ -137,12 +137,6 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
         <div className="sidebar-bottom">
           {me ? (
             <>
-              {/* LOGOUT ACIMA DO USER - ordem invertida */}
-              <button className="logout-btn" onClick={handleLogout}>
-                <span className="nav-icon">🚪</span>
-                <span className="nav-label">Logout</span>
-              </button>
-
               <div className="sidebar-user">
                 <div className="user-avatar">{me.username ? me.username[0].toUpperCase() : '?'}</div>
                 <div className="user-info">
