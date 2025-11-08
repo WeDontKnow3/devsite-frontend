@@ -107,7 +107,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
 
       <aside className={`sidebar ${open ? 'open' : 'closed'}`} aria-expanded={open}>
         <div className="sidebar-top">
-          <div className="logo">CS</div>
+          <div className="logo">RC</div>
           <div className="sidebar-title">
             <div className="header-title">Rugplicate</div>
             <div className="header-sub">by zt01</div>
