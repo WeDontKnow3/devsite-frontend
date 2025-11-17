@@ -47,7 +47,7 @@ export default function AdminPanel() {
     if (tab === 'db') loadDB();
   }, [tab]);
 
-  if (!me) return <div className="page"><div className="card">Carregando usuário...</div></div>;
+  if (!me) return <div className="page"><div className="card">Loading...</div></div>;
   if (!me.is_admin) return <div className="page"><div className="card" style={{color:'#fda4af'}}>Access denied — admin only.</div></div>;
 
   async function toggleBan(user) {
