@@ -21,7 +21,6 @@ export default function App() {
   const [moneyAnims, setMoneyAnims] = useState([]); // {id, amount, type}
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Load profile (user + balance)
   async function loadMe() {
     try {
       const res = await api.getMe();
@@ -54,7 +53,6 @@ export default function App() {
     setView('market');
   }
 
-  // trigger money animation: type = 'up' (gain) | 'down' (spend)
   function triggerMoneyAnimation(amount = 0, type = 'down') {
     const id = animId++;
     const entry = { id, amount: Number(amount), type };
@@ -65,8 +63,6 @@ export default function App() {
     }, 1100);
   }
 
-  // function passed to children — when they complete actions (trades, create, redeem), they call this
-  // accepts { keepView, animate: { amount, type } }
   async function handleActionComplete(opts = {}) {
     if (opts.animate) {
       triggerMoneyAnimation(opts.animate.amount, opts.animate.type);
@@ -78,7 +74,7 @@ export default function App() {
   // navigation helper
   function handleNavigate(v) {
     setView(v);
-    if (window.innerWidth < 900) setSidebarOpen(false); // auto-close on mobile
+    if (window.innerWidth < 900) setSidebarOpen(false); 
   }
 
   return (
@@ -200,7 +196,6 @@ export default function App() {
   );
 }
 
-// Money animation component
 function MoneyAnim({ amount = 0, type = 'down' }) {
   const sign = type === 'up' ? '+' : '-';
   const cls = type === 'up' ? 'money-up' : 'money-down';
