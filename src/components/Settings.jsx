@@ -70,8 +70,15 @@ export default function Settings() {
   }
 
   function applyTheme(themeName) {
-    document.documentElement.setAttribute('data-theme', themeName);
+  if (themeName === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.remove('dark');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.documentElement.classList.add('dark');
   }
+}
+
 
   function handleThemeChange(newTheme) {
     setTheme(newTheme);
