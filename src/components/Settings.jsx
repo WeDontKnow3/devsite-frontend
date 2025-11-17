@@ -13,7 +13,7 @@ export default function Settings() {
     accountAge: 0
   });
 
-  // Load saved theme and user data
+  // theme save
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
@@ -33,13 +33,11 @@ export default function Settings() {
       if (userRes && userRes.user) {
         setUser(userRes.user);
 
-        // Calculate statistics from transactions
         const txs = (txRes && txRes.transactions) ? txRes.transactions : [];
         const tradeTxs = txs.filter(t => t.type === 'buy' || t.type === 'sell');
 
         const totalVolume = tradeTxs.reduce((sum, t) => sum + Number(t.usd_amount || 0), 0);
 
-        // Simplified win rate calculation
         const buyTxs = tradeTxs.filter(t => t.type === 'buy');
         const sellTxs = tradeTxs.filter(t => t.type === 'sell');
         let wins = 0;
@@ -53,7 +51,7 @@ export default function Settings() {
         });
         const winRate = buyTxs.length > 0 ? (wins / buyTxs.length) * 100 : 0;
 
-        // Account age: fallback/random if not available
+        // account age random rn, should fix soon
         const accountAge = userRes.user.created_at ? Math.max(0, Math.floor((Date.now() - new Date(userRes.user.created_at).getTime()) / (1000 * 60 * 60 * 24))) : Math.floor(Math.random() * 90) + 1;
 
         setStats({
@@ -108,7 +106,6 @@ export default function Settings() {
         <div className="success-msg">✓ {msg}</div>
       )}
 
-      {/* Account Info Card */}
       <div className="card">
         <h3 style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span>👤</span> Account Info
@@ -229,7 +226,6 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Portfolio Summary Card */}
       <div className="card">
         <h3 style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span>💼</span> Portfolio
@@ -256,7 +252,6 @@ export default function Settings() {
         )}
       </div>
 
-      {/* Danger Zone */}
       <div className="card danger-zone">
         <h3 style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, color: '#ef4444' }}>
           <span>⚠</span> Danger Zone
@@ -280,7 +275,7 @@ export default function Settings() {
             className="btn danger-btn"
             onClick={() => {
               if (window.confirm('Are you sure? This will delete ALL your data permanently!')) {
-                alert('Feature in development');
+                alert('Feature in development (not working)');
               }
             }}
           >
