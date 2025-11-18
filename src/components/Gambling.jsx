@@ -1,11 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as api from '../api';
-import headImg from '../assets/coin-head.png';
-import tailImg from '../assets/coin-tail.png';
 
 const MIN_BET = 1;
 const MAX_BET = 1000000;
 const ANIM_DURATION = 1800;
+
+let headImg;
+let tailImg;
+try {
+  headImg = new URL('../assets/coin-head.png', import.meta.url).href;
+  tailImg = new URL('../assets/coin-tail.png', import.meta.url).href;
+} catch (e) {
+  headImg = '/assets/coin-head.png';
+  tailImg = '/assets/coin-tail.png';
+}
 
 export default function Gambling({ onBack, onActionComplete }) {
   const [bet, setBet] = useState('');
