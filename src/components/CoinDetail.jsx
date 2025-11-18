@@ -14,6 +14,8 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
   const [userTokenAmount, setUserTokenAmount] = useState(0);
   const [estimatedTokens, setEstimatedTokens] = useState(null);
   const [estimatedUsd, setEstimatedUsd] = useState(null);
+  const [topHolders, setTopHolders] = useState([]);
+  const [loadingHolders, setLoadingHolders] = useState(false);
 
   const prevPriceRef = useRef(null);
   const priceElRef = useRef(null);
@@ -28,6 +30,23 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
       }
     } catch (e) {
       console.error('loadUserData error', e);
+    }
+  }
+
+  async function loadTopHolders() {
+    setLoadingHolders(true);
+    try {
+      const r = await api.getCoinHolders(symbol);
+      if (r && r.holders) {
+        setTopHolders(r.holders);
+      } else {
+        setTopHolders([]);
+      }
+    } catch (e) {
+      console.error('loadTopHolders error', e);
+      setTopHolders([]);
+    } finally {
+      setLoadingHolders(false);
     }
   }
 
@@ -70,6 +89,7 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
     load(); 
     loadHistory(); 
     loadUserData();
+    loadTopHolders();
   }, [symbol]);
 
   useEffect(() => {
@@ -144,6 +164,7 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
         await load();
         await loadHistory();
         await loadUserData();
+        await loadTopHolders();
         if (onActionComplete) onActionComplete({ keepView: true, animate: { amount: Number(res.bought.usdSpent || usd), type: 'down' } });
         setBuyUsd('');
         setEstimatedTokens(null);
@@ -171,6 +192,7 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
         await load();
         await loadHistory();
         await loadUserData();
+        await loadTopHolders();
         if (onActionComplete) onActionComplete({ keepView: true, animate: { amount: Number(res.sold.usdGained || 0), type: 'up' } });
         setSellAmt('');
         setEstimatedUsd(null);
@@ -285,6 +307,46 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
               </div>
             )}
             <button className="btn" onClick={sell} disabled={loading} style={{marginTop:'8px'}}>{loading ? 'Processing...' : 'Sell'}</button>
+          </div>
+
+          <div className="card">
+            <h3>Top 10 Holders</h3>
+            {loadingHolders && <div style={{color:'#aaa', fontSize:'0.9em'}}>Loading holders...</div>}
+            {!loadingHolders && topHolders.length === 0 && <div style={{color:'#aaa', fontSize:'0.9em'}}>No holders yet</div>}
+            {!loadingHolders && topHolders.length > 0 && (
+              <div style={{marginTop:'12px'}}>
+                {topHolders.map((holder, idx) => (
+                  <div key={idx} style={{
+                    display:'flex', 
+                    justifyContent:'space-between', 
+                    alignItems:'center',
+                    padding:'8px 0',
+                    borderBottom: idx < topHolders.length - 1 ? '1px solid #333' : 'none'
+                  }}>
+                    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                      <span style={{
+                        color: idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : idx === 2 ? '#CD7F32' : '#888',
+                        fontWeight: idx < 3 ? 'bold' : 'normal',
+                        minWidth:'25px'
+                      }}>
+                        #{idx + 1}
+                      </span>
+                      <span style={{fontWeight: idx < 3 ? '600' : 'normal'}}>
+                        {holder.username}
+                      </span>
+                    </div>
+                    <div style={{textAlign:'right'}}>
+                      <div style={{fontWeight:'600'}}>
+                        {Number(holder.amount).toLocaleString()} {symbol}
+                      </div>
+                      <div style={{fontSize:'0.85em', color:'#aaa'}}>
+                        {holder.percentage ? `${holder.percentage.toFixed(2)}%` : '—'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {msg && <p className="msg">{msg}</p>}
