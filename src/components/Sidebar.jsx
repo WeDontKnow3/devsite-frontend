@@ -4,12 +4,11 @@ import * as api from '../api';
 export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [balanceAnim, setBalanceAnim] = useState(null); // 'up'|'down'|null
+  const [balanceAnim, setBalanceAnim] = useState(null);
   const prevBalanceRef = useRef(null);
   const pollRef = useRef(null);
 
-  // live trades state
-  const [trades, setTrades] = useState([]); // newest first
+  const [trades, setTrades] = useState([]);
   const wsRef = useRef(null);
   const reconnectRef = useRef({ attempts: 0, timeout: null });
 
@@ -37,17 +36,14 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
         setMe(null);
       }
     } catch (err) {
-      // silently ignore network errors
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    // initial load
     fetchMe();
 
-    // poll while page is visible
     function handleVisibility() {
       if (pollRef.current) clearInterval(pollRef.current);
       if (!document.hidden) pollRef.current = setInterval(fetchMe, 5000);
@@ -61,10 +57,8 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
       document.removeEventListener('visibilitychange', handleVisibility);
       stopWebsocket();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ws start logic
   const WS_URL = import.meta.env.VITE_WS_URL || "wss://devsite-backend-production.up.railway.app/ws";
   const MAX_TRADES = 6;
 
@@ -116,7 +110,6 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   }
 
   function scheduleReconnect() {
-    // exponential backoff up to a limit
     const r = reconnectRef.current;
     r.attempts = (r.attempts || 0) + 1;
     const delay = Math.min(30000, 500 * Math.pow(2, Math.min(r.attempts, 6)) );
@@ -137,12 +130,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   useEffect(() => {
     if (WS_URL) startWebsocket();
     return () => stopWebsocket();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [WS_URL]);
-
-  // ---------------- end websocket ----------------
-
-  const tokensCount = (me && Array.isArray(me.tokens)) ? me.tokens.reduce((s, t) => s + Number(t.amount || 0), 0) : 0;
 
   function fmtUSD(n) {
     try { return Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -164,7 +152,6 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
 
   return (
     <>
-      {/* Mobile overlay when sidebar is open */}
       <div
         className={`sidebar-overlay ${open ? 'visible' : ''}`}
         onClick={() => typeof setOpen === 'function' && setOpen(false)}
@@ -232,11 +219,6 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
                   </div>
                   {me.is_admin && <div className="user-badge">ADMIN</div>}
                 </div>
-              </div>
-
-              <div className="tokens-info">
-                <div className="tokens-label">Tokens</div>
-                <div className="tokens-value">{Intl.NumberFormat().format(tokensCount)}</div>
               </div>
 
               <button className="logout-btn" onClick={handleLogout} aria-label="Logout">⎋ Logout</button>
