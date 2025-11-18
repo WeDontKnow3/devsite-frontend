@@ -5,15 +5,8 @@ const MIN_BET = 1;
 const MAX_BET = 1000000;
 const ANIM_DURATION = 1800;
 
-let headImg;
-let tailImg;
-try {
-  headImg = new URL('../assets/coin-head.png', import.meta.url).href;
-  tailImg = new URL('../assets/coin-tail.png', import.meta.url).href;
-} catch (e) {
-  headImg = '/assets/coin-head.png';
-  tailImg = '/assets/coin-tail.png';
-}
+const HEAD_IMG_URL = 'https://cdn.discordapp.com/attachments/1434987028562448589/1436397093521592350/10_20251107164843.png?ex=691d4c4a&is=691bfaca&hm=0c7dae9d2ec448be41631f015c8fbb5845219222cfe90072fdbf1097905461f0&';
+const TAIL_IMG_URL = 'https://cdn.discordapp.com/attachments/1434987028562448589/1436397093869715609/10_20251107164835.png?ex=691d4c4a&is=691bfaca&hm=8edaa8682c2cff43594fe38bd12757490b8e4cd4a009fe548ee3f2660d3cbaeb&';
 
 export default function Gambling({ onBack, onActionComplete }) {
   const [bet, setBet] = useState('');
@@ -165,11 +158,11 @@ export default function Gambling({ onBack, onActionComplete }) {
           >
             <div
               className="coin-face front"
-              style={{ backgroundImage: `url(${headImg})` }}
+              style={{ backgroundImage: `url(${HEAD_IMG_URL})` }}
             />
             <div
               className="coin-face back"
-              style={{ backgroundImage: `url(${tailImg})` }}
+              style={{ backgroundImage: `url(${TAIL_IMG_URL})` }}
             />
           </div>
         </div>
