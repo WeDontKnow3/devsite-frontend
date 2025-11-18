@@ -13,9 +13,9 @@ async function safeJson(res){
   }
 }
 
-export async function register(username, password, adminSecret = null){
+export async function register(username, password, captchaToken, adminSecret = null){
   try{
-    const body = { username, password };
+    const body = { username, password, captcha: captchaToken };
     if (adminSecret) body.adminSecret = adminSecret;
     const res = await fetch(`${API_BASE}/api/register`, {
       method: "POST",
