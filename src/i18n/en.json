@@ -111,4 +111,13 @@
   "create.createError": "Error creating coin (see console)",
   "create.networkError": "Network error creating coin (see console)",
   "create.insufficientBalanceShort": "Insufficient balance: need $1,100 to create."
+
+  "dashboard": "Dashboard",
+  "loading": "Loading...",
+  "usd_balance": "USD balance",
+  "tokens": "Tokens",
+  "no_tokens": "No tokens",
+  "transactions": "Transactions",
+  "no_transactions": "No transactions"
+
 }
