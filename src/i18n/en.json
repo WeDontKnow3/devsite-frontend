@@ -166,5 +166,10 @@
   "tokensText": "{{amount}} tokens",
 
   "genericErrorInvalidJson": "invalid_json_response",
-  "genericErrorNetwork": "network_error"
+  "genericErrorNetwork": "network_error",
+
+  "editBalance": "Edit Balance",
+  "enterNewBalance": "Enter new balance for {{user}}:",
+  "invalidBalance": "Invalid balance value",
+  "balanceUpdated": "Balance updated for {{user}}"
 }
