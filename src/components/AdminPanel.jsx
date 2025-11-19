@@ -64,6 +64,23 @@ export default function AdminPanel() {
     setLoading(false);
   }
 
+  async function editUserBalance(user) {
+    const newBalance = window.prompt(t('enterNewBalance', { user: user.username }), String(user.usd_balance || 0));
+    if (newBalance === null) return;
+    const balance = Number(newBalance);
+    if (isNaN(balance) || balance < 0) {
+      setMsg(t('invalidBalance'));
+      return;
+    }
+    setLoading(true); setMsg('');
+    const r = await api.adminUpdateUserBalance(user.id, balance);
+    if (r && r.ok) {
+      setMsg(t('balanceUpdated', { user: user.username }));
+      await loadUsers();
+    } else setMsg(r && r.error ? r.error : t('error'));
+    setLoading(false);
+  }
+
   async function deleteUser(user) {
     if (!window.confirm(t('deleteUserConfirm', { user: user.username }))) return;
     setLoading(true); setMsg('');
@@ -156,6 +173,7 @@ export default function AdminPanel() {
                   </div>
                 </div>
                 <div style={{display:'flex', gap:8}}>
+                  <button className="btn" onClick={()=>editUserBalance(u)}>{t('editBalance')}</button>
                   <button className="btn" onClick={()=>toggleBan(u)}>{u.is_banned ? t('unban') : t('ban')}</button>
                   <button className="btn ghost" onClick={()=>deleteUser(u)}>{t('delete')}</button>
                 </div>
