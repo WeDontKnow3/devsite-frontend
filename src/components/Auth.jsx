@@ -39,19 +39,41 @@ export default function Auth({ onLogin }) {
     }
   }
 
+  function handleModeSwitch() {
+    setMode(mode === 'login' ? 'register' : 'login');
+    setMsg('');
+    setCaptchaToken(null);
+  }
+
   return (
     <div className="auth card">
       <h2>{mode === 'login' ? 'Login' : 'Register'}</h2>
       <form onSubmit={submit}>
-        <input placeholder="username" value={username} onChange={e => setUsername(e.target.value)} required />
-        <input placeholder="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        {mode === 'register' && (
-          <ReCAPTCHA sitekey={import.meta.env.VITE_RECAPTCHA_SITEKEY} onChange={token => setCaptchaToken(token)} />
+        <input 
+          placeholder="username" 
+          value={username} 
+          onChange={e => setUsername(e.target.value)} 
+          required 
+        />
+        <input 
+          placeholder="password" 
+          type="password" 
+          value={password} 
+          onChange={e => setPassword(e.target.value)} 
+          required 
+        />
+        {mode === 'register' && import.meta.env.VITE_RECAPTCHA_SITEKEY && (
+          <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+            <ReCAPTCHA 
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITEKEY} 
+              onChange={token => setCaptchaToken(token)} 
+            />
+          </div>
         )}
         <button type="submit">{mode === 'login' ? 'Login' : 'Register'}</button>
       </form>
       <p>
-        <button type="button" onClick={() => setMode(mode === 'login' ? 'register' : 'login')}>
+        <button type="button" onClick={handleModeSwitch}>
           Switch to {mode === 'login' ? 'Register' : 'Login'}
         </button>
       </p>
