@@ -159,8 +159,8 @@ export default function App() {
               {view === 'leaderboard' && t('leaderboard')}
               {view === 'settings' && t('settings')}
               {view === 'admin' && t('adminPanel')}
-              {view === 'promos' && t('promos')}
               {view === 'gambling' && t('gambling')}
+              {view === 'promos' && 'Promocodes'}
             </h1>
           </div>
 
@@ -251,6 +251,10 @@ export default function App() {
 
           {user && user.is_admin && view === 'admin' && (
             <AdminPanel onActionComplete={handleActionComplete} />
+          )}
+
+          {user && view === 'promos' && (
+            <Promocodes onActionComplete={handleActionComplete} />
           )}
 
           {user && view === 'gambling' && (
