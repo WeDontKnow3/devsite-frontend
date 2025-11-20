@@ -1,13 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as api from '../api';
 
-const MIN_BET = 1;
-const MAX_BET = 1000000;
+const COIN_MIN_BET = 1;
+const COIN_MAX_BET = 1000000;
+const SLOTS_MIN_BET = 0.01;
+const SLOTS_MAX_BET = 1000000;
 const ANIM_DURATION = 1100;
+const SLOT_SPIN_DURATION = 2000;
 
 const HEAD_IMG_URL = 'https://ibb.co/yBZW24Hz';
 const TAIL_IMG_URL = 'https://ibb.co/XZLtkB1F';
+
+const SLOT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '💎', '7️⃣', '⭐'];
+const SLOT_PAYOUTS = {
+  '🍒🍒🍒': 2,
+  '🍋🍋🍋': 3,
+  '🍊🍊🍊': 5,
+  '🍇🍇🍇': 8,
+  '💎💎💎': 15,
+  '7️⃣7️⃣7️⃣': 50,
+  '⭐⭐⭐': 100
+};
+
 export default function Gambling({ onBack, onActionComplete }) {
+  const [gameMode, setGameMode] = useState('coinflip');
   const [bet, setBet] = useState('');
   const [side, setSide] = useState('heads');
   const [processing, setProcessing] = useState(false);
@@ -16,6 +32,8 @@ export default function Gambling({ onBack, onActionComplete }) {
   const [animName, setAnimName] = useState('');
   const [flipping, setFlipping] = useState(false);
   const [landSide, setLandSide] = useState(null);
+  const [slotReels, setSlotReels] = useState([SLOT_SYMBOLS[0], SLOT_SYMBOLS[0], SLOT_SYMBOLS[0]]);
+  const [spinning, setSpinning] = useState(false);
   const animTimerRef = useRef(null);
 
   useEffect(() => {
@@ -24,21 +42,37 @@ export default function Gambling({ onBack, onActionComplete }) {
     };
   }, []);
 
+  const currentMinBet = gameMode === 'coinflip' ? COIN_MIN_BET : SLOTS_MIN_BET;
+  const currentMaxBet = gameMode === 'coinflip' ? COIN_MAX_BET : SLOTS_MAX_BET;
+
   function clampBet(v) {
     const n = Number(v || 0);
     if (!Number.isFinite(n)) return '';
-    const floored = Math.floor(n);
-    if (floored < MIN_BET) return MIN_BET.toString();
-    if (floored > MAX_BET) return MAX_BET.toString();
-    return floored.toString();
+    const minBet = gameMode === 'coinflip' ? COIN_MIN_BET : SLOTS_MIN_BET;
+    const maxBet = gameMode === 'coinflip' ? COIN_MAX_BET : SLOTS_MAX_BET;
+    if (n < minBet) return minBet.toString();
+    if (n > maxBet) return maxBet.toString();
+    return n.toString();
+  }
+
+  function switchGame(direction) {
+    if (processing || flipping || spinning) return;
+    setMessage(null);
+    setResult(null);
+    setBet('');
+    if (direction === 'next') {
+      setGameMode(gameMode === 'coinflip' ? 'slots' : 'coinflip');
+    } else {
+      setGameMode(gameMode === 'slots' ? 'coinflip' : 'slots');
+    }
   }
 
   async function handleFlip() {
     setMessage(null);
     setResult(null);
     const nBet = Number(bet);
-    if (!nBet || nBet < MIN_BET || nBet > MAX_BET) {
-      setMessage(`Bet must be between ${MIN_BET} and ${MAX_BET}`);
+    if (!nBet || nBet < COIN_MIN_BET || nBet > COIN_MAX_BET) {
+      setMessage(`Bet must be between ${COIN_MIN_BET} and ${COIN_MAX_BET}`);
       return;
     }
     const token = localStorage.getItem('token');
@@ -97,6 +131,98 @@ export default function Gambling({ onBack, onActionComplete }) {
     }
   }
 
+  async function handleSlotSpin() {
+    setMessage(null);
+    setResult(null);
+    const nBet = Number(bet);
+    if (!nBet || nBet < SLOTS_MIN_BET || nBet > SLOTS_MAX_BET) {
+      setMessage(`Bet must be between $${SLOTS_MIN_BET} and $${SLOTS_MAX_BET.toLocaleString()}`);
+      return;
+    }
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setMessage('You must be logged in to play');
+      return;
+    }
+    setProcessing(true);
+    setSpinning(true);
+    
+    try {
+      const data = await api.playSlots(nBet);
+      let win = false;
+      let net = 0;
+      let serverOk = false;
+      let finalReels = [SLOT_SYMBOLS[0], SLOT_SYMBOLS[0], SLOT_SYMBOLS[0]];
+      
+      if (data && data.ok) {
+        serverOk = true;
+        net = Number(data.net || 0);
+        win = net > 0;
+        if (data.reels && Array.isArray(data.reels)) {
+          finalReels = data.reels;
+        }
+      } else {
+        const rand = Math.random();
+        if (rand < 0.05) {
+          const winKey = Object.keys(SLOT_PAYOUTS)[Math.floor(Math.random() * Object.keys(SLOT_PAYOUTS).length)];
+          finalReels = winKey.split('');
+          const multiplier = SLOT_PAYOUTS[winKey];
+          net = nBet * multiplier;
+          win = true;
+        } else {
+          finalReels = [
+            SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+            SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+            SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]
+          ];
+          net = -nBet;
+          win = false;
+        }
+      }
+
+      animTimerRef.current = setTimeout(() => {
+        setSlotReels(finalReels);
+        setSpinning(false);
+        setResult({ server: serverOk, win, net, message: data && data.message ? data.message : null });
+        setMessage(win ? `You won $${Math.abs(net).toFixed(2)}` : `You lost $${Math.abs(net).toFixed(2)}`);
+        if (onActionComplete && typeof onActionComplete === 'function') {
+          onActionComplete({ animate: { amount: Math.abs(net), type: win ? 'up' : 'down' }, keepView: true });
+        }
+        setProcessing(false);
+      }, SLOT_SPIN_DURATION);
+    } catch (err) {
+      const rand = Math.random();
+      let finalReels = [SLOT_SYMBOLS[0], SLOT_SYMBOLS[0], SLOT_SYMBOLS[0]];
+      let net = -nBet;
+      let win = false;
+      
+      if (rand < 0.05) {
+        const winKey = Object.keys(SLOT_PAYOUTS)[Math.floor(Math.random() * Object.keys(SLOT_PAYOUTS).length)];
+        finalReels = winKey.split('');
+        const multiplier = SLOT_PAYOUTS[winKey];
+        net = nBet * multiplier;
+        win = true;
+      } else {
+        finalReels = [
+          SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+          SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+          SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]
+        ];
+      }
+
+      animTimerRef.current = setTimeout(() => {
+        setSlotReels(finalReels);
+        setSpinning(false);
+        setResult({ server: false, win, net, message: 'network error, simulated result' });
+        setMessage(win ? `You won $${Math.abs(net).toFixed(2)} (simulated)` : `You lost $${Math.abs(net).toFixed(2)} (simulated)`);
+        if (onActionComplete && typeof onActionComplete === 'function') {
+          onActionComplete({ animate: { amount: Math.abs(net), type: net > 0 ? 'up' : 'down' }, keepView: true });
+        }
+        setProcessing(false);
+      }, SLOT_SPIN_DURATION);
+    }
+  }
+
   const coinSize = 220;
 
   return (
@@ -104,6 +230,10 @@ export default function Gambling({ onBack, onActionComplete }) {
       <style>{`
         .gambling-container{max-width:680px;margin:0 auto}
         .gambling-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+        .gambling-title-wrapper{display:flex;align-items:center;gap:16px}
+        .game-switch-btn{background:var(--glass);border:2px solid var(--border);border-radius:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;transition:all 0.2s;cursor:pointer}
+        .game-switch-btn:hover:not(:disabled){background:var(--card);border-color:var(--danger);transform:scale(1.05)}
+        .game-switch-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none!important}
         .gambling-title{font-size:28px;font-weight:800;color:var(--text-primary);margin:0;display:flex;align-items:center;gap:12px}
         .gambling-title-icon{font-size:32px}
         .gambling-card{background:var(--card);padding:32px;border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,0.08)}
@@ -149,6 +279,27 @@ export default function Gambling({ onBack, onActionComplete }) {
         .coin.land-tail{transform:rotateY(180deg) rotateX(0deg) translateY(0) scale(1)}
         .coin-shadow{width:${Math.floor(coinSize * 0.5)}px;height:${Math.floor(coinSize * 0.1)}px;border-radius:50%;background:rgba(0,0,0,0.25);transition:all ${ANIM_DURATION}ms ease;position:absolute;bottom:-20px}
         .coin.spinToHead + .coin-shadow,.coin.spinToTail + .coin-shadow{transform:scale(0.7);opacity:0.5}
+        .slots-display{display:flex;flex-direction:column;align-items:center;margin:40px 0}
+        .slots-machine{display:flex;gap:16px;margin-bottom:32px;perspective:1000px}
+        .slot-reel{width:120px;height:140px;background:linear-gradient(135deg,var(--glass) 0%,var(--card) 100%);border:3px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:72px;box-shadow:inset 0 4px 12px rgba(0,0,0,0.1),0 8px 24px rgba(0,0,0,0.15);position:relative;overflow:hidden}
+        .slot-reel.spinning{animation:slotSpin ${SLOT_SPIN_DURATION}ms cubic-bezier(0.25,0.46,0.45,0.94)}
+        .slot-reel.spinning::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 0%,rgba(255,255,255,0.1) 50%,transparent 100%);animation:slotBlur ${SLOT_SPIN_DURATION}ms linear infinite}
+        @keyframes slotSpin{
+          0%,100%{transform:translateY(0) rotateX(0deg)}
+          25%{transform:translateY(-10px) rotateX(-5deg)}
+          50%{transform:translateY(0) rotateX(0deg)}
+          75%{transform:translateY(10px) rotateX(5deg)}
+        }
+        @keyframes slotBlur{
+          0%,100%{opacity:0}
+          50%{opacity:1}
+        }
+        .slots-paytable{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:24px;width:100%}
+        .paytable-title{font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;text-align:center}
+        .paytable-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+        .paytable-item{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--card);border-radius:6px;font-size:14px}
+        .paytable-symbols{font-size:18px}
+        .paytable-multiplier{font-weight:700;color:var(--success)}
         .result-display{text-align:center;width:100%}
         .result-label{font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
         .result-value{font-size:36px;font-weight:900;color:var(--text-primary);min-height:45px;display:flex;align-items:center;justify-content:center}
@@ -168,7 +319,9 @@ export default function Gambling({ onBack, onActionComplete }) {
           .coin-wrapper{width:180px;height:180px}
           .coin{width:165px;height:165px}
           .coin-shadow{width:90px}
+          .slot-reel{width:90px;height:110px;font-size:56px}
           .result-value{font-size:28px}
+          .paytable-grid{grid-template-columns:1fr}
         }
         @media (max-width:480px){
           .gambling-card{padding:20px 16px}
@@ -177,15 +330,32 @@ export default function Gambling({ onBack, onActionComplete }) {
           .coin-wrapper{width:160px;height:160px}
           .coin{width:146px;height:146px}
           .coin-shadow{width:80px}
+          .slot-reel{width:80px;height:100px;font-size:48px;gap:12px}
           .result-value{font-size:24px}
         }
       `}</style>
 
       <div className="gambling-header">
-        <h1 className="gambling-title">
-          <span className="gambling-title-icon">🎰</span>
-          Coin Flip
-        </h1>
+        <div className="gambling-title-wrapper">
+          <button 
+            className="game-switch-btn"
+            onClick={() => switchGame('prev')}
+            disabled={processing || flipping || spinning}
+          >
+            ←
+          </button>
+          <h1 className="gambling-title">
+            <span className="gambling-title-icon">{gameMode === 'coinflip' ? '🎰' : '🎰'}</span>
+            {gameMode === 'coinflip' ? 'Coin Flip' : 'Slots'}
+          </h1>
+          <button 
+            className="game-switch-btn"
+            onClick={() => switchGame('next')}
+            disabled={processing || flipping || spinning}
+          >
+            →
+          </button>
+        </div>
         <button className="btn ghost" onClick={onBack}>Back</button>
       </div>
 
@@ -193,7 +363,7 @@ export default function Gambling({ onBack, onActionComplete }) {
         <div className="gambling-warning">
           <span className="gambling-warning-icon">⚠️</span>
           <p className="gambling-warning-text">
-            High-risk gambling game. Bet between ${MIN_BET.toLocaleString()} and ${MAX_BET.toLocaleString()}. Play responsibly and never bet more than you can afford to lose.
+            High-risk gambling game. Bet between ${currentMinBet.toLocaleString()} and ${currentMaxBet.toLocaleString()}. Play responsibly and never bet more than you can afford to lose.
           </p>
         </div>
 
@@ -206,82 +376,91 @@ export default function Gambling({ onBack, onActionComplete }) {
                 type="number"
                 className="bet-input"
                 value={bet}
-                min={MIN_BET}
-                max={MAX_BET}
+                min={currentMinBet}
+                max={currentMaxBet}
+                step={gameMode === 'slots' ? '0.01' : '1'}
                 onChange={(e) => setBet(clampBet(e.target.value))}
-                placeholder={`${MIN_BET.toLocaleString()}`}
-                disabled={processing || flipping}
+                placeholder={`${currentMinBet.toLocaleString()}`}
+                disabled={processing || flipping || spinning}
               />
             </div>
           </div>
 
-          <div className="control-group">
-            <label className="control-label">Choose Side</label>
-            <div className="side-buttons">
-              <button 
-                className={`side-btn ${side === 'heads' ? 'active' : ''}`}
-                onClick={() => setSide('heads')}
-                disabled={processing || flipping}
-              >
-                <span>👑</span> Heads
-              </button>
-              <button 
-                className={`side-btn ${side === 'tails' ? 'active' : ''}`}
-                onClick={() => setSide('tails')}
-                disabled={processing || flipping}
-              >
-                <span>⚡</span> Tails
-              </button>
+          {gameMode === 'coinflip' && (
+            <div className="control-group">
+              <label className="control-label">Choose Side</label>
+              <div className="side-buttons">
+                <button 
+                  className={`side-btn ${side === 'heads' ? 'active' : ''}`}
+                  onClick={() => setSide('heads')}
+                  disabled={processing || flipping}
+                >
+                  <span>👑</span> Heads
+                </button>
+                <button 
+                  className={`side-btn ${side === 'tails' ? 'active' : ''}`}
+                  onClick={() => setSide('tails')}
+                  disabled={processing || flipping}
+                >
+                  <span>⚡</span> Tails
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="control-group">
             <button 
               className="flip-btn"
-              onClick={handleFlip}
-              disabled={processing || flipping}
+              onClick={gameMode === 'coinflip' ? handleFlip : handleSlotSpin}
+              disabled={processing || flipping || spinning}
             >
-              {processing || flipping ? '🎲 Flipping...' : '🎲 Flip Coin'}
+              {gameMode === 'coinflip' 
+                ? (processing || flipping ? '🎲 Flipping...' : '🎲 Flip Coin')
+                : (processing || spinning ? '🎰 Spinning...' : '🎰 Spin Slots')}
             </button>
           </div>
         </div>
 
-        <div className="coin-display">
-          <div className="coin-wrapper">
-            <div
-              className={`coin ${animName ? animName : (landSide === 'tails' ? 'land-tail' : landSide === 'heads' ? 'land-head' : '')}`}
-            >
-              <div className="coin-face front" style={{ backgroundImage: `url(${HEAD_IMG_URL})` }} />
-              <div className="coin-face back" style={{ backgroundImage: `url(${TAIL_IMG_URL})` }} />
+        {gameMode === 'coinflip' ? (
+          <div className="coin-display">
+            <div className="coin-wrapper">
+              <div
+                className={`coin ${animName ? animName : (landSide === 'tails' ? 'land-tail' : landSide === 'heads' ? 'land-head' : '')}`}
+              >
+                <div className="coin-face front" style={{ backgroundImage: `url(${HEAD_IMG_URL})` }} />
+                <div className="coin-face back" style={{ backgroundImage: `url(${TAIL_IMG_URL})` }} />
+              </div>
+              <div className="coin-shadow" />
             </div>
-            <div className="coin-shadow" />
-          </div>
 
-          <div className="result-display">
-            <div className="result-label">Result</div>
-            <div className={`result-value ${result ? (result.win ? 'win' : 'loss') : ''}`}>
-              {result ? (result.win ? `+$${Math.abs(result.net).toFixed(2)}` : `-$${Math.abs(result.net).toFixed(2)}`) : '—'}
+            <div className="result-display">
+              <div className="result-label">Result</div>
+              <div className={`result-value ${result ? (result.win ? 'win' : 'loss') : ''}`}>
+                {result ? (result.win ? `+$${Math.abs(result.net).toFixed(2)}` : `-$${Math.abs(result.net).toFixed(2)}`) : '—'}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="slots-display">
+            <div className="slots-machine">
+              {slotReels.map((symbol, idx) => (
+                <div key={idx} className={`slot-reel ${spinning ? 'spinning' : ''}`}>
+                  {spinning ? SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)] : symbol}
+                </div>
+              ))}
+            </div>
 
-        {message && (
-          <div className={`message-box ${result && result.win ? 'success' : 'error'}`}>
-            {message}
-          </div>
-        )}
+            <div className="result-display">
+              <div className="result-label">Result</div>
+              <div className={`result-value ${result ? (result.win ? 'win' : 'loss') : ''}`}>
+                {result ? (result.win ? `+$${Math.abs(result.net).toFixed(2)}` : `-$${Math.abs(result.net).toFixed(2)}`) : '—'}
+              </div>
+            </div>
 
-        {result && (
-          <div className="result-footer">
-            <span className="result-footer-label">
-              {result.server ? '✓ Server Result' : '⚠ Simulated Result'}
-            </span>
-            <span className={`result-footer-value ${result.win ? 'win' : 'loss'}`}>
-              {result.win ? `+$${Math.abs(result.net).toFixed(2)}` : `-$${Math.abs(result.net).toFixed(2)}`}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+            <div className="slots-paytable">
+              <div className="paytable-title">Paytable</div>
+              <div className="paytable-grid">
+                {Object.entries(SLOT_PAYOUTS).map(([combo, mult]) => (
+                  <div key={combo} className="paytable-item">
+                    <span className="paytable-symbols">{combo}</span>
+                    <span className="paytable-multiplier">{mult
