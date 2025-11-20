@@ -463,4 +463,31 @@ export default function Gambling({ onBack, onActionComplete }) {
                 {Object.entries(SLOT_PAYOUTS).map(([combo, mult]) => (
                   <div key={combo} className="paytable-item">
                     <span className="paytable-symbols">{combo}</span>
-                    <span className="paytable-multiplier">{mult
+                    <span className="paytable-multiplier">{mult}x</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {message && (
+          <div className={`message-box ${result && result.win ? 'success' : 'error'}`}>
+            {message}
+          </div>
+        )}
+
+        {result && (
+          <div className="result-footer">
+            <span className="result-footer-label">
+              {result.server ? '✓ Server Result' : '⚠ Simulated Result'}
+            </span>
+            <span className={`result-footer-value ${result.win ? 'win' : 'loss'}`}>
+              {result.win ? `+$${Math.abs(result.net).toFixed(2)}` : `-$${Math.abs(result.net).toFixed(2)}`}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
