@@ -6,7 +6,7 @@ export default function AdminPanel() {
   const { t } = useTranslation();
   const [me, setMe] = useState(null);
   const [tab, setTab] = useState('users');
-  const [promoForm, setPromoForm] = useState({ code: '', amount: '', maxUses: 0, perUserLimit: 1, expiresAt: '' });
+  const [promoForm, setPromoForm] = useState({ code: '', amount: '', maxUses: 0, perUserLimit: 1, expiresAt: '', showPublic: true });
   const [adminPromos, setAdminPromos] = useState([]);
   const [users, setUsers] = useState([]);
   const [coins, setCoins] = useState([]);
@@ -155,7 +155,20 @@ export default function AdminPanel() {
     setLoading(false);
   }
 
-  async function createPromo(e) {
+  async function togglePromoVisibility(promo) {
+  setLoading(true);
+  setMsg('');
+  const r = await api.adminUpdatePromoCode(promo.id, { show_public: !promo.show_public });
+  if (r && r.ok) {
+    setMsg(`Promocode ${promo.code} visibility updated`);
+    await loadAdminPromos();
+  } else {
+    setMsg(r && r.error ? r.error : 'Failed to update promocode');
+  }
+  setLoading(false);
+}
+  
+async function createPromo(e) {
   e.preventDefault();
   if (!promoForm.code || !promoForm.amount) {
     setMsg('Code and amount are required');
@@ -168,18 +181,19 @@ export default function AdminPanel() {
     amount: Number(promoForm.amount),
     maxUses: Number(promoForm.maxUses) || 0,
     perUserLimit: Number(promoForm.perUserLimit) || 1,
-    expiresAt: promoForm.expiresAt || null
+    expiresAt: promoForm.expiresAt || null,
+    showPublic: !!promoForm.showPublic
   };
   const r = await api.createPromoCode(payload);
   if (r && r.ok) {
     setMsg('Promocode created successfully');
-    setPromoForm({ code: '', amount: '', maxUses: 0, perUserLimit: 1, expiresAt: '' });
+    setPromoForm({ code: '', amount: '', maxUses: 0, perUserLimit: 1, expiresAt: '', showPublic: true });
     await loadAdminPromos();
   } else {
     setMsg(r && r.error ? r.error : 'Failed to create promocode');
   }
   setLoading(false);
-  }
+}
 
   return (
     <div className="page">
@@ -255,80 +269,96 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {tab === 'promos' && (
-        <div className="card">
-          <h3>Create Promocode</h3>
-          <form onSubmit={createPromo} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <input
-                type="text"
-                placeholder="Code (e.g., WELCOME100)"
-                value={promoForm.code}
-                onChange={e => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })}
-                style={{ padding: '8px 12px' }}
-                required
-              />
-              <input
-                type="number"
-                placeholder="Amount ($)"
-                value={promoForm.amount}
-                onChange={e => setPromoForm({ ...promoForm, amount: e.target.value })}
-                style={{ padding: '8px 12px' }}
-                min="0.01"
-                step="0.01"
-                required
-              />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <input
-                type="number"
-                placeholder="Max uses (0 = unlimited)"
-                value={promoForm.maxUses}
-                onChange={e => setPromoForm({ ...promoForm, maxUses: e.target.value })}
-                style={{ padding: '8px 12px' }}
-                min="0"
-              />
-              <input
-                type="number"
-                placeholder="Per user limit"
-                value={promoForm.perUserLimit}
-                onChange={e => setPromoForm({ ...promoForm, perUserLimit: e.target.value })}
-                style={{ padding: '8px 12px' }}
-                min="1"
-              />
-            </div>
-            <input
-              type="datetime-local"
-              placeholder="Expires at (optional)"
-              value={promoForm.expiresAt}
-              onChange={e => setPromoForm({ ...promoForm, expiresAt: e.target.value })}
-              style={{ padding: '8px 12px' }}
-            />
-            <button type="submit" className="btn" disabled={loading}>
-              Create Promocode
-            </button>
-          </form>
+       {tab === 'promos' && (
+  <div className="card">
+    <h3>Create Promocode</h3>
+    <form onSubmit={createPromo} style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <input
+          type="text"
+          placeholder="Code (e.g., WELCOME100)"
+          value={promoForm.code}
+          onChange={e => setPromoForm({ ...promoForm, code: e.target.value.toUpperCase() })}
+          style={{ padding: '8px 12px' }}
+          required
+        />
+        <input
+          type="number"
+          placeholder="Amount ($)"
+          value={promoForm.amount}
+          onChange={e => setPromoForm({ ...promoForm, amount: e.target.value })}
+          style={{ padding: '8px 12px' }}
+          min="0.01"
+          step="0.01"
+          required
+        />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <input
+          type="number"
+          placeholder="Max uses (0 = unlimited)"
+          value={promoForm.maxUses}
+          onChange={e => setPromoForm({ ...promoForm, maxUses: e.target.value })}
+          style={{ padding: '8px 12px' }}
+          min="0"
+        />
+        <input
+          type="number"
+          placeholder="Per user limit"
+          value={promoForm.perUserLimit}
+          onChange={e => setPromoForm({ ...promoForm, perUserLimit: e.target.value })}
+          style={{ padding: '8px 12px' }}
+          min="1"
+        />
+      </div>
+      <input
+        type="datetime-local"
+        placeholder="Expires at (optional)"
+        value={promoForm.expiresAt}
+        onChange={e => setPromoForm({ ...promoForm, expiresAt: e.target.value })}
+        style={{ padding: '8px 12px' }}
+      />
+      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+        <input
+          type="checkbox"
+          checked={promoForm.showPublic}
+          onChange={e => setPromoForm({ ...promoForm, showPublic: e.target.checked })}
+          style={{ width: 18, height: 18, cursor: 'pointer' }}
+        />
+        <span>Show in public promocodes page</span>
+      </label>
+      <button type="submit" className="btn" disabled={loading}>
+        Create Promocode
+      </button>
+    </form>
 
-          <div style={{ marginTop: 32 }}>
-            <h3>All Promocodes ({adminPromos.length})</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              {adminPromos.map(p => (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                  <div>
-                    <div style={{ fontWeight: 800 }}>
-                      {p.code} {!p.active && <span className="muted" style={{ fontSize: 12 }}>(inactive)</span>}
-                    </div>
-                    <div className="muted" style={{ fontSize: 13 }}>
-                      ${p.amount} • {p.used_count}/{p.max_uses || '∞'} used • {p.per_user_limit}/user
-                      {p.expires_at && ` • expires ${new Date(p.expires_at).toLocaleDateString()}`}
-                    </div>
-                  </div>
-                </div>
-              ))}
+    <div style={{ marginTop: 32 }}>
+      <h3>All Promocodes ({adminPromos.length})</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+        {adminPromos.map(p => (
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+            <div>
+              <div style={{ fontWeight: 800 }}>
+                {p.code}
+                {!p.active && <span className="muted" style={{ fontSize: 12 }}> (inactive)</span>}
+                {p.show_public && <span style={{ fontSize: 12, color: '#86efac', marginLeft: 8 }}>👁 Public</span>}
+                {!p.show_public && <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 8 }}>🔒 Hidden</span>}
+              </div>
+              <div className="muted" style={{ fontSize: 13 }}>
+                ${p.amount} • {p.used_count}/{p.max_uses || '∞'} used • {p.per_user_limit}/user
+                {p.expires_at && ` • expires ${new Date(p.expires_at).toLocaleDateString()}`}
+              </div>
             </div>
+            <button 
+              className="btn" 
+              onClick={() => togglePromoVisibility(p)}
+              disabled={loading}
+            >
+              {p.show_public ? 'Hide' : 'Show'}
+            </button>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
-  );
-}
+  </div>
+)}                                                   {
