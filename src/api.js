@@ -138,7 +138,7 @@ export async function buyCoin(symbol, usdAmount){
     const res = await fetch(`${API_BASE}/api/trade/buy`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ symbol, usdAmount })
+      body: JSON.stringify({ symbol, usd_amount: usdAmount })
     });
     return await safeJson(res);
   }catch(e){
@@ -151,7 +151,7 @@ export async function sellCoin(symbol, tokenAmount){
     const res = await fetch(`${API_BASE}/api/trade/sell`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ symbol, tokenAmount })
+      body: JSON.stringify({ symbol, token_amount: tokenAmount })
     });
     return await safeJson(res);
   }catch(e){
