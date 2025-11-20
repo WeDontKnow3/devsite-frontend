@@ -128,12 +128,12 @@ export default function Gambling({ onBack, onActionComplete }) {
       if (counts[sym] === 3) {
         const combo = `${sym}${sym}${sym}`;
         const mult = SLOT_PAYOUTS[combo] || 0;
-        return nBet * mult;
+        return nBet * (mult - 1);
       }
     }
     for (const sym in counts) {
       if (counts[sym] === 2) {
-        return nBet * TWO_MATCH_MULT;
+        return nBet * (TWO_MATCH_MULT - 1);
       }
     }
     return -nBet;
@@ -258,7 +258,7 @@ export default function Gambling({ onBack, onActionComplete }) {
           finalReels = [sym, sym, sym];
           const combo = `${sym}${sym}${sym}`;
           const multiplier = SLOT_PAYOUTS[combo] || 0;
-          net = nBet * multiplier;
+          net = nBet * (multiplier - 1);
           win = true;
         } else {
           finalReels = [
@@ -311,7 +311,7 @@ export default function Gambling({ onBack, onActionComplete }) {
         finalReels = [sym, sym, sym];
         const combo = `${sym}${sym}${sym}`;
         const multiplier = SLOT_PAYOUTS[combo] || 0;
-        net = nBet * multiplier;
+        net = nBet * (multiplier - 1);
         win = true;
       } else {
         finalReels = [
