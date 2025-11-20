@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as api from '../api';
+import spinAudioFile from '../assets/slot-spin.mp3';
+import winAudioFile from '../assets/slot-win.mp3';
+import loseAudioFile from '../assets/slot-lose.mp3';
 
 const COIN_MIN_BET = 1;
 const COIN_MAX_BET = 1000000;
@@ -10,10 +13,6 @@ const SLOT_SPIN_DURATION = 2000;
 
 const HEAD_IMG_URL = 'https://ibb.co/yBZW24Hz';
 const TAIL_IMG_URL = 'https://ibb.co/XZLtkB1F';
-
-const SLOT_SPIN_AUDIO_URL = '/assets/slot-spin.mp3';
-const SLOT_WIN_AUDIO_URL = '/assets/slot-win.mp3';
-const SLOT_LOSE_AUDIO_URL = '/assets/slot-lose.mp3';
 
 const SLOT_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '💎', '7️⃣', '⭐'];
 const SLOT_PAYOUTS = {
@@ -49,18 +48,9 @@ export default function Gambling({ onBack, onActionComplete }) {
     return () => {
       if (animTimerRef.current) clearTimeout(animTimerRef.current);
       if (reelIntervalRef.current) clearInterval(reelIntervalRef.current);
-      if (spinAudioRef.current) {
-        try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch (e) {}
-        spinAudioRef.current = null;
-      }
-      if (winAudioRef.current) {
-        try { winAudioRef.current.pause(); winAudioRef.current.currentTime = 0; } catch (e) {}
-        winAudioRef.current = null;
-      }
-      if (loseAudioRef.current) {
-        try { loseAudioRef.current.pause(); loseAudioRef.current.currentTime = 0; } catch (e) {}
-        loseAudioRef.current = null;
-      }
+      if (spinAudioRef.current) try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch(e) {}
+      if (winAudioRef.current) try { winAudioRef.current.pause(); winAudioRef.current.currentTime = 0; } catch(e) {}
+      if (loseAudioRef.current) try { loseAudioRef.current.pause(); loseAudioRef.current.currentTime = 0; } catch(e) {}
     };
   }, []);
 
@@ -188,7 +178,7 @@ export default function Gambling({ onBack, onActionComplete }) {
       return nBet * mult;
     }
     if (a === b || a === c || b === c) {
-      return nBet * 0.5;
+      return nBet * 2;
     }
     return -nBet;
   }
@@ -208,27 +198,16 @@ export default function Gambling({ onBack, onActionComplete }) {
     }
     setProcessing(true);
     setSpinning(true);
-    if (winAudioRef.current) {
-      try { winAudioRef.current.pause(); winAudioRef.current.currentTime = 0; } catch (e) {}
-      winAudioRef.current = null;
-    }
-    if (loseAudioRef.current) {
-      try { loseAudioRef.current.pause(); loseAudioRef.current.currentTime = 0; } catch (e) {}
-      loseAudioRef.current = null;
-    }
-    if (spinAudioRef.current) {
-      try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch (e) {}
+    if (winAudioRef.current) try { winAudioRef.current.pause(); winAudioRef.current.currentTime = 0; } catch(e) {}
+    if (loseAudioRef.current) try { loseAudioRef.current.pause(); loseAudioRef.current.currentTime = 0; } catch(e) {}
+    if (spinAudioRef.current) try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch(e) {}
+    try {
+      spinAudioRef.current = new Audio(spinAudioFile);
+      spinAudioRef.current.loop = true;
+      const p = spinAudioRef.current.play();
+      if (p && p.catch) p.catch(() => {});
+    } catch (e) {
       spinAudioRef.current = null;
-    }
-    if (SLOT_SPIN_AUDIO_URL) {
-      try {
-        spinAudioRef.current = new Audio(SLOT_SPIN_AUDIO_URL);
-        spinAudioRef.current.loop = true;
-        const p = spinAudioRef.current.play();
-        if (p && p.catch) p.catch(() => {});
-      } catch (e) {
-        spinAudioRef.current = null;
-      }
     }
     try {
       const data = await api.playSlots(nBet);
@@ -256,9 +235,9 @@ export default function Gambling({ onBack, onActionComplete }) {
       } else {
         const rand = Math.random();
         if (rand < 0.05) {
-          const winKey = Object.keys(SLOT_PAYOUTS)[Math.floor(Math.random() * Object.keys(SLOT_PAYOUTS).length)];
-          finalReels = winKey.split('');
-          const multiplier = SLOT_PAYOUTS[winKey];
+          const sym = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+          finalReels = [sym, sym, sym];
+          const multiplier = SLOT_PAYOUTS[`${sym}${sym}${sym}`] || 0;
           net = nBet * multiplier;
           win = true;
         } else {
@@ -272,31 +251,24 @@ export default function Gambling({ onBack, onActionComplete }) {
         }
       }
       animTimerRef.current = setTimeout(() => {
-        if (spinAudioRef.current) {
-          try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch (e) {}
-          spinAudioRef.current = null;
-        }
+        if (spinAudioRef.current) try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch(e) {}
         if (win) {
-          if (SLOT_WIN_AUDIO_URL) {
-            try {
-              winAudioRef.current = new Audio(SLOT_WIN_AUDIO_URL);
-              winAudioRef.current.loop = false;
-              const p = winAudioRef.current.play();
-              if (p && p.catch) p.catch(() => {});
-            } catch (e) {
-              winAudioRef.current = null;
-            }
+          try {
+            winAudioRef.current = new Audio(winAudioFile);
+            winAudioRef.current.loop = false;
+            const p = winAudioRef.current.play();
+            if (p && p.catch) p.catch(() => {});
+          } catch (e) {
+            winAudioRef.current = null;
           }
         } else {
-          if (SLOT_LOSE_AUDIO_URL) {
-            try {
-              loseAudioRef.current = new Audio(SLOT_LOSE_AUDIO_URL);
-              loseAudioRef.current.loop = false;
-              const p = loseAudioRef.current.play();
-              if (p && p.catch) p.catch(() => {});
-            } catch (e) {
-              loseAudioRef.current = null;
-            }
+          try {
+            loseAudioRef.current = new Audio(loseAudioFile);
+            loseAudioRef.current.loop = false;
+            const p = loseAudioRef.current.play();
+            if (p && p.catch) p.catch(() => {});
+          } catch (e) {
+            loseAudioRef.current = null;
           }
         }
         setSlotReels(finalReels);
@@ -314,9 +286,9 @@ export default function Gambling({ onBack, onActionComplete }) {
       let net = -nBet;
       let win = false;
       if (rand < 0.05) {
-        const winKey = Object.keys(SLOT_PAYOUTS)[Math.floor(Math.random() * Object.keys(SLOT_PAYOUTS).length)];
-        finalReels = winKey.split('');
-        const multiplier = SLOT_PAYOUTS[winKey];
+        const sym = SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)];
+        finalReels = [sym, sym, sym];
+        const multiplier = SLOT_PAYOUTS[`${sym}${sym}${sym}`] || 0;
         net = nBet * multiplier;
         win = true;
       } else {
@@ -329,31 +301,24 @@ export default function Gambling({ onBack, onActionComplete }) {
         win = net > 0;
       }
       animTimerRef.current = setTimeout(() => {
-        if (spinAudioRef.current) {
-          try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch (e) {}
-          spinAudioRef.current = null;
-        }
+        if (spinAudioRef.current) try { spinAudioRef.current.pause(); spinAudioRef.current.currentTime = 0; } catch(e) {}
         if (win) {
-          if (SLOT_WIN_AUDIO_URL) {
-            try {
-              winAudioRef.current = new Audio(SLOT_WIN_AUDIO_URL);
-              winAudioRef.current.loop = false;
-              const p = winAudioRef.current.play();
-              if (p && p.catch) p.catch(() => {});
-            } catch (e) {
-              winAudioRef.current = null;
-            }
+          try {
+            winAudioRef.current = new Audio(winAudioFile);
+            winAudioRef.current.loop = false;
+            const p = winAudioRef.current.play();
+            if (p && p.catch) p.catch(() => {});
+          } catch (e) {
+            winAudioRef.current = null;
           }
         } else {
-          if (SLOT_LOSE_AUDIO_URL) {
-            try {
-              loseAudioRef.current = new Audio(SLOT_LOSE_AUDIO_URL);
-              loseAudioRef.current.loop = false;
-              const p = loseAudioRef.current.play();
-              if (p && p.catch) p.catch(() => {});
-            } catch (e) {
-              loseAudioRef.current = null;
-            }
+          try {
+            loseAudioRef.current = new Audio(loseAudioFile);
+            loseAudioRef.current.loop = false;
+            const p = loseAudioRef.current.play();
+            if (p && p.catch) p.catch(() => {});
+          } catch (e) {
+            loseAudioRef.current = null;
           }
         }
         setSlotReels(finalReels);
@@ -615,7 +580,7 @@ export default function Gambling({ onBack, onActionComplete }) {
                 ))}
                 <div className="paytable-item">
                   <span className="paytable-symbols">Any two same</span>
-                  <span className="paytable-multiplier">0.5x</span>
+                  <span className="paytable-multiplier">2x</span>
                 </div>
               </div>
             </div>
