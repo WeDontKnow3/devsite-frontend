@@ -165,6 +165,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           <NavItem active={view === 'create'} label="Create Coin" onClick={() => navigate('create')} icon="create" />
           <NavItem active={view === 'leaderboard'} label="Leaderboard" onClick={() => navigate('leaderboard')} icon="leaderboard" />
           <NavItem active={view === 'gambling'} label="Gambling" onClick={() => navigate('gambling')} icon="gambling" />
+          <NavItem active={view === 'promos'} label="Promocodes" onClick={() => navigate('promos')} icon="promo" />
           <NavItem active={view === 'settings'} label="Settings" onClick={() => navigate('settings')} icon="settings" />
           {me && me.is_admin && (
             <NavItem active={view === 'admin'} label="Admin" onClick={() => navigate('admin')} icon="admin" />
@@ -280,6 +281,13 @@ function Icon({ name }) {
           <rect x="11" y="9" width="6" height="4" rx="0.8" fill="currentColor"/>
         </svg>
       );
+    case 'promo':
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+        <path d="M21 8.5L16 3.5L10.5 9L9 7.5L3 13.5L4.5 15L9 10.5L10.5 12L16.5 6L19 8.5V8.5C19.5523 8.5 20 8.94772 20 9.5V14.5C20 15.0523 19.5523 15.5 19 15.5H9C8.44772 15.5 8 15.0523 8 14.5V13L6 15V16.5C6 17.6046 6.89543 18.5 8 18.5H19C20.1046 18.5 21 17.6046 21 16.5V8.5Z" fill="currentColor"/>
+        <circle cx="16" cy="12" r="1.5" fill="currentColor"/>
+       </svg>
+     );
     case 'settings':
       return (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
