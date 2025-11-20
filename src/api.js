@@ -133,28 +133,28 @@ export async function createCoin(payload){
   }
 }
 
-export async function buyCoin(symbol, usdAmount){
-  try{
+export async function buyCoin(symbol, usdAmount) {
+  try {
     const res = await fetch(`${API_BASE}/api/trade/buy`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ symbol, usd_amount: usdAmount })
+      body: JSON.stringify({ symbol, usd_amount: usdAmount }),
     });
     return await safeJson(res);
-  }catch(e){
+  } catch (e) {
     return { error: e.message || "network_error" };
   }
 }
 
-export async function sellCoin(symbol, tokenAmount){
-  try{
+export async function sellCoin(symbol, tokenAmount) {
+  try {
     const res = await fetch(`${API_BASE}/api/trade/sell`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ symbol, token_amount: tokenAmount })
+      body: JSON.stringify({ symbol, token_amount: tokenAmount }),
     });
     return await safeJson(res);
-  }catch(e){
+  } catch (e) {
     return { error: e.message || "network_error" };
   }
 }
