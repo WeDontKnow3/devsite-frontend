@@ -5,9 +5,8 @@ const MIN_BET = 1;
 const MAX_BET = 1000000;
 const ANIM_DURATION = 1100;
 
-const HEAD_IMG_URL = 'https://cdn.discordapp.com/attachments/1434987028562448589/1436397093521592350/10_20251107164843.png?ex=691d4c4a&is=691bfaca&hm=0c7dae9d2ec448be41631f015c8fbb5845219222cfe90072fdbf1097905461f0&';
-const TAIL_IMG_URL = 'https://cdn.discordapp.com/attachments/1434987028562448589/1436397093869715609/10_20251107164835.png?ex=691d4c4a&is=691bfaca&hm=8edaa8682c2cff43594fe38bd12757490b8e4cd4a009fe548ee3f2660d3cbaeb&';
-
+const HEAD_IMG_URL = 'https://ibb.co/yBZW24Hz';
+const TAIL_IMG_URL = 'https://ibb.co/XZLtkB1F';
 export default function Gambling({ onBack, onActionComplete }) {
   const [bet, setBet] = useState('');
   const [side, setSide] = useState('heads');
