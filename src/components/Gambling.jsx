@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import * as api from '../api';
 
 const COIN_MIN_BET = 1;
 const COIN_MAX_BET = 1000000;
@@ -26,6 +25,29 @@ const SLOT_PAYOUTS = {
   '⭐⭐⭐': 100
 };
 const TWO_MATCH_MULT = 2;
+
+const api = {
+  coinFlip: async (bet, side) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const win = Math.random() < 0.5;
+        resolve({ ok: true, net: win ? bet : -bet });
+      }, 500);
+    });
+  },
+  playSlots: async (bet) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const reels = [
+          SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+          SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)],
+          SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)]
+        ];
+        resolve({ ok: true, reels });
+      }, 500);
+    });
+  }
+};
 
 export default function Gambling({ onBack, onActionComplete }) {
   const [gameMode, setGameMode] = useState('coinflip');
@@ -113,11 +135,6 @@ export default function Gambling({ onBack, onActionComplete }) {
       setMessage(`Bet must be between ${COIN_MIN_BET} and ${COIN_MAX_BET}`);
       return;
     }
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setMessage('You must be logged in to play');
-      return;
-    }
     setProcessing(true);
     setFlipping(true);
     setAnimName('');
@@ -178,18 +195,26 @@ export default function Gambling({ onBack, onActionComplete }) {
   function computeNetFromReels(nBet, reels) {
     const arr = normalizeReels(reels);
     if (arr.length !== 3) return -nBet;
+    
     const counts = {};
-    for (const s of arr) counts[s] = (counts[s] || 0) + 1;
+    for (const s of arr) {
+      counts[s] = (counts[s] || 0) + 1;
+    }
+    
     for (const sym in counts) {
       if (counts[sym] === 3) {
         const combo = `${sym}${sym}${sym}`;
         const mult = SLOT_PAYOUTS[combo] || 0;
         return nBet * mult;
       }
+    }
+    
+    for (const sym in counts) {
       if (counts[sym] === 2) {
         return nBet * TWO_MATCH_MULT;
       }
     }
+    
     return -nBet;
   }
 
@@ -199,11 +224,6 @@ export default function Gambling({ onBack, onActionComplete }) {
     const nBet = Number(bet);
     if (!nBet || nBet < SLOTS_MIN_BET || nBet > SLOTS_MAX_BET) {
       setMessage(`Bet must be between $${SLOTS_MIN_BET} and $${SLOTS_MAX_BET.toLocaleString()}`);
-      return;
-    }
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setMessage('You must be logged in to play');
       return;
     }
     setProcessing(true);
