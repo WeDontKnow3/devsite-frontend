@@ -518,3 +518,21 @@ export async function adminSendGlobalNotification(payload){
     return { error: e.message || "network_error" };
   }
 }
+
+export async function getApiLatencyStats(){
+  try{
+    const res = await fetch(`${API_BASE}/api/stats/latency`, { headers: { ...authHeaders() } });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function getApiUptimeStats(){
+  try{
+    const res = await fetch(`${API_BASE}/api/stats/uptime`, { headers: { ...authHeaders() } });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
