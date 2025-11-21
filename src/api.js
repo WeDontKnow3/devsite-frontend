@@ -438,3 +438,16 @@ export async function deleteCoinComment(commentId){
     return { error: e.message || "network_error" };
   }
 }
+
+export async function transferAssets(payload){
+  try{
+    const res = await fetch(`${API_BASE}/api/transfer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(payload)
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
