@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as api from '../api';
 
-export default function ApiKeyPanel({ onClose }) {
+export default function ApiKeyPanel() {
   const [apiKeys, setApiKeys] = useState([]);
   const [newKeyName, setNewKeyName] = useState('');
   const [creatingKey, setCreatingKey] = useState(false);
@@ -71,164 +71,171 @@ export default function ApiKeyPanel({ onClose }) {
   }
 
   return (
-    <div style={{ 
-      marginTop: 12,
-      padding: 12,
-      background: 'rgba(255,255,255,0.03)',
-      borderRadius: 8,
-      maxHeight: 300,
-      overflowY: 'auto'
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h4 style={{ margin: 0, fontSize: 14, fontWeight: 800 }}>API Keys</h4>
-        <button 
-          onClick={onClose}
-          style={{ 
-            background: 'none',
-            border: 'none',
-            color: '#94a3b8',
-            cursor: 'pointer',
-            fontSize: 18,
-            padding: 0
-          }}
-        >
-          ×
-        </button>
-      </div>
+    <div className="page">
+      <div className="card">
+        <h2>API Keys</h2>
+        <p className="muted">Manage your API keys to access coin data programmatically</p>
 
-      <form onSubmit={handleCreateApiKey} style={{ marginBottom: 12 }}>
-        <input
-          type="text"
-          placeholder="Key name"
-          value={newKeyName}
-          onChange={e => setNewKeyName(e.target.value)}
-          style={{ 
-            width: '100%',
-            padding: '6px 8px',
-            fontSize: 12,
-            marginBottom: 8,
-            background: 'rgba(0,0,0,0.2)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: 4,
-            color: 'white'
-          }}
-          disabled={creatingKey}
-        />
-        <button
-          type="submit"
-          disabled={creatingKey || !newKeyName.trim()}
-          style={{
-            width: '100%',
-            padding: '6px',
-            fontSize: 12,
-            background: 'rgba(59, 130, 246, 0.5)',
-            border: 'none',
-            borderRadius: 4,
-            color: 'white',
-            cursor: 'pointer',
-            fontWeight: 600
-          }}
-        >
-          {creatingKey ? 'Creating...' : 'Create API Key'}
-        </button>
-      </form>
-
-      {apiMsg && (
-        <div style={{ 
-          fontSize: 11,
-          padding: 8,
-          background: apiMsg.includes('created') ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-          color: apiMsg.includes('created') ? '#86efac' : '#fda4af',
-          borderRadius: 4,
-          marginBottom: 12,
-          wordBreak: 'break-all'
-        }}>
-          {apiMsg}
-        </div>
-      )}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {apiKeys.length === 0 && (
-          <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center' }}>
-            No API keys yet
+        <form onSubmit={handleCreateApiKey} style={{ marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Key name (e.g., My Bot)"
+              value={newKeyName}
+              onChange={e => setNewKeyName(e.target.value)}
+              style={{ 
+                flex: 1,
+                minWidth: 200,
+                padding: '8px 12px',
+                fontSize: 14
+              }}
+              disabled={creatingKey}
+            />
+            <button
+              type="submit"
+              className="btn"
+              disabled={creatingKey || !newKeyName.trim()}
+            >
+              {creatingKey ? 'Creating...' : 'Create API Key'}
+            </button>
           </div>
-        )}
-        {apiKeys.map(key => (
+        </form>
+
+        {apiMsg && (
           <div 
-            key={key.id}
-            style={{
-              padding: 8,
-              background: 'rgba(0,0,0,0.2)',
-              borderRadius: 4,
-              fontSize: 11
+            className="msg" 
+            style={{ 
+              marginTop: 12, 
+              color: apiMsg.includes('created') ? '#86efac' : '#fda4af',
+              wordBreak: 'break-all'
             }}
           >
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>{key.name}</div>
-            <div style={{ color: '#94a3b8', marginBottom: 4, fontFamily: 'monospace' }}>
-              {key.api_key}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <span style={{ color: '#94a3b8' }}>
-                {key.requests_used}/{key.requests_limit} requests
-              </span>
-              <span style={{ 
-                fontSize: 10,
-                padding: '2px 6px',
-                background: key.active ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                color: key.active ? '#86efac' : '#fda4af',
-                borderRadius: 3
-              }}>
-                {key.active ? 'Active' : 'Inactive'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              <button
-                onClick={() => handleResetApiKey(key.id)}
-                style={{
-                  flex: 1,
-                  padding: '4px',
-                  fontSize: 10,
-                  background: 'rgba(59, 130, 246, 0.3)',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: 'white',
-                  cursor: 'pointer'
-                }}
-              >
-                Reset
-              </button>
-              <button
-                onClick={() => handleDeleteApiKey(key.id)}
-                style={{
-                  flex: 1,
-                  padding: '4px',
-                  fontSize: 10,
-                  background: 'rgba(239, 68, 68, 0.3)',
-                  border: 'none',
-                  borderRadius: 3,
-                  color: 'white',
-                  cursor: 'pointer'
-                }}
-              >
-                Delete
-              </button>
-            </div>
+            {apiMsg}
           </div>
-        ))}
-      </div>
+        )}
 
-      <div style={{ 
-        marginTop: 12,
-        padding: 8,
-        background: 'rgba(59, 130, 246, 0.1)',
-        borderRadius: 4,
-        fontSize: 10,
-        color: '#94a3b8'
-      }}>
-        <div style={{ fontWeight: 700, marginBottom: 4 }}>API Endpoint:</div>
-        <code style={{ color: '#bfc7d6' }}>GET /api/v1/coin/:symbol</code>
-        <div style={{ marginTop: 4 }}>
-          Use header: <code style={{ color: '#bfc7d6' }}>X-API-Key: your_key</code>
+        <div style={{ 
+          marginTop: 24,
+          padding: 16,
+          background: 'rgba(59, 130, 246, 0.1)',
+          borderRadius: 8,
+          border: '1px solid rgba(59, 130, 246, 0.2)'
+        }}>
+          <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 14 }}>API Documentation</div>
+          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>
+            <strong>Endpoint:</strong> <code style={{ color: '#bfc7d6', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>GET /api/v1/coin/:symbol</code>
+          </div>
+          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>
+            <strong>Header:</strong> <code style={{ color: '#bfc7d6', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4 }}>X-API-Key: your_key</code>
+          </div>
+          <div style={{ fontSize: 13, color: '#94a3b8' }}>
+            <strong>Rate Limit:</strong> 2,000 requests per month (resets automatically)
+          </div>
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <h3>Your API Keys ({apiKeys.length}/5)</h3>
+          
+          {apiKeys.length === 0 && (
+            <div style={{ 
+              marginTop: 16,
+              padding: 32,
+              textAlign: 'center',
+              color: '#94a3b8',
+              background: 'rgba(255,255,255,0.02)',
+              borderRadius: 8
+            }}>
+              No API keys yet. Create one to get started.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
+            {apiKeys.map(key => (
+              <div 
+                key={key.id}
+                style={{
+                  padding: 16,
+                  background: 'rgba(255,255,255,0.02)',
+                  borderRadius: 8,
+                  border: '1px solid rgba(255,255,255,0.05)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{key.name}</div>
+                    <div style={{ 
+                      color: '#94a3b8', 
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      wordBreak: 'break-all',
+                      background: 'rgba(0,0,0,0.3)',
+                      padding: '6px 8px',
+                      borderRadius: 4,
+                      marginTop: 8
+                    }}>
+                      {key.api_key}
+                    </div>
+                  </div>
+                  <span style={{ 
+                    fontSize: 12,
+                    padding: '4px 12px',
+                    background: key.active ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: key.active ? '#86efac' : '#fda4af',
+                    borderRadius: 4,
+                    fontWeight: 600
+                  }}>
+                    {key.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  padding: '12px 0',
+                  borderTop: '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  marginBottom: 12
+                }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Usage</div>
+                    <div style={{ fontWeight: 700, fontSize: 18 }}>
+                      {key.requests_used.toLocaleString()} / {key.requests_limit.toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Remaining</div>
+                    <div style={{ fontWeight: 700, fontSize: 18, color: '#86efac' }}>
+                      {(key.requests_limit - key.requests_used).toLocaleString()}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Usage</div>
+                    <div style={{ fontWeight: 700, fontSize: 18 }}>
+                      {((key.requests_used / key.requests_limit) * 100).toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => handleResetApiKey(key.id)}
+                    className="btn"
+                    style={{ flex: 1, minWidth: 100 }}
+                  >
+                    Reset Counter
+                  </button>
+                  <button
+                    onClick={() => handleDeleteApiKey(key.id)}
+                    className="btn ghost"
+                    style={{ flex: 1, minWidth: 100 }}
+                  >
+                    Delete Key
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
