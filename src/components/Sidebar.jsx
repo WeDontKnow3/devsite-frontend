@@ -4,6 +4,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(false);
   const [balanceAnim, setBalanceAnim] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const prevBalanceRef = useRef(null);
   const pollRef = useRef(null);
 
@@ -53,11 +54,35 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
     }
   }
 
+  async function fetchUnreadCount() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      const res = await fetch(`${import.meta.env.VITE_API_BASE || 'https://devsite-backend-production.up.railway.app'}/api/notifications/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const data = await res.json();
+      if (data && typeof data.count === 'number') {
+        setUnreadCount(data.count);
+      }
+    } catch (err) {
+      console.error('fetch unread count err', err);
+    }
+  }
+
   useEffect(() => {
     fetchMe();
+    fetchUnreadCount();
     function handleVisibility() {
       if (pollRef.current) clearInterval(pollRef.current);
-      if (!document.hidden) pollRef.current = setInterval(fetchMe, 5000);
+      if (!document.hidden) {
+        pollRef.current = setInterval(() => {
+          fetchMe();
+          fetchUnreadCount();
+        }, 5000);
+      }
     }
     document.addEventListener('visibilitychange', handleVisibility);
     handleVisibility();
@@ -188,8 +213,8 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
         onClick={() => typeof setOpen === 'function' && setOpen(false)}
         style={{ display: window.innerWidth < 900 && open ? 'block' : 'none' }}
       />
-      <aside className={`sidebar ${open ? 'open' : 'closed'}`} aria-expanded={open}>
-        <div className="sidebar-top">
+      <aside className={`sidebar ${open ? 'open' : 'closed'}`} aria-expanded={open} style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <div className="sidebar-top" style={{ flexShrink: 0 }}>
           <div className="logo">ZT</div>
           <div className="sidebar-title">
             <div className="header-title">RUGPLICATE</div>
@@ -197,7 +222,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           </div>
         </div>
 
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" style={{ flexShrink: 0 }}>
           <NavItem active={view === 'market'} label="Market" onClick={() => navigate('market')} icon="market" />
           <NavItem active={view === 'portfolio'} label="Portfolio" onClick={() => navigate('portfolio')} icon="portfolio" />
           <NavItem active={view === 'dashboard'} label="Dashboard" onClick={() => navigate('dashboard')} icon="dashboard" />
@@ -205,6 +230,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           <NavItem active={view === 'leaderboard'} label="Leaderboard" onClick={() => navigate('leaderboard')} icon="leaderboard" />
           <NavItem active={view === 'promos'} label="Promocodes" onClick={() => navigate('promos')} icon="promo" />
           <NavItem active={view === 'gambling'} label="Gambling" onClick={() => navigate('gambling')} icon="gambling" />
+          <NavItem active={view === 'notifications'} label="Notifications" onClick={() => navigate('notifications')} icon="notification" badge={unreadCount > 0 ? unreadCount : null} />
           <NavItem active={view === 'apikeys'} label="API Keys" onClick={() => navigate('apikeys')} icon="apikey" />
           <NavItem active={view === 'settings'} label="Settings" onClick={() => navigate('settings')} icon="settings" />
           {me && me.is_admin && (
@@ -212,8 +238,8 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           )}
         </nav>
 
-        <div className="live-trades-card" style={{ marginTop: 10, marginBottom: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div className="live-trades-card" style={{ margin: '10px 0', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexShrink: 0 }}>
             <div style={{ fontWeight: 800 }}>Live Trades ($1k+)</div>
             <div style={{ 
               fontSize: 11, 
@@ -235,13 +261,14 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           </div>
 
           <div style={{ 
-            maxHeight: 320, 
+            flex: 1,
             overflowY: 'auto',
             overflowX: 'hidden',
             display: 'flex', 
             flexDirection: 'column', 
             gap: 8,
-            paddingRight: 4
+            paddingRight: 4,
+            minHeight: 0
           }}>
             {trades.length === 0 ? (
               <div className="muted" style={{ textAlign: 'center', padding: '20px 0', fontSize: 13 }}>
@@ -259,7 +286,8 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
                     backgroundColor: t.side === 'buy' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
                     borderRadius: 6,
                     borderLeft: `3px solid ${t.side === 'buy' ? '#10b981' : '#ef4444'}`,
-                    animation: 'slideIn 0.3s ease-out'
+                    animation: 'slideIn 0.3s ease-out',
+                    flexShrink: 0
                   }}
                 >
                   <div style={{ 
@@ -296,7 +324,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           </div>
         </div>
 
-        <div className="sidebar-bottom">
+        <div className="sidebar-bottom" style={{ flexShrink: 0 }}>
           {me ? (
             <>
               <div className="sidebar-user">
@@ -342,21 +370,21 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           }
         }
 
-        .live-trades-card::-webkit-scrollbar {
+        .live-trades-card > div:last-child::-webkit-scrollbar {
           width: 6px;
         }
 
-        .live-trades-card::-webkit-scrollbar-track {
+        .live-trades-card > div:last-child::-webkit-scrollbar-track {
           background: rgba(148, 163, 184, 0.1);
           border-radius: 3px;
         }
 
-        .live-trades-card::-webkit-scrollbar-thumb {
+        .live-trades-card > div:last-child::-webkit-scrollbar-thumb {
           background: rgba(148, 163, 184, 0.3);
           border-radius: 3px;
         }
 
-        .live-trades-card::-webkit-scrollbar-thumb:hover {
+        .live-trades-card > div:last-child::-webkit-scrollbar-thumb:hover {
           background: rgba(148, 163, 184, 0.5);
         }
       `}</style>
@@ -364,13 +392,32 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   );
 }
 
-function NavItem({ active, label, onClick, icon }) {
+function NavItem({ active, label, onClick, icon, badge }) {
   return (
-    <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>
+    <button className={`nav-item ${active ? 'active' : ''}`} onClick={onClick} style={{ position: 'relative' }}>
       <span className="nav-icon" aria-hidden>
         <Icon name={icon} />
       </span>
       <span className="nav-label">{label}</span>
+      {badge && (
+        <span style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          backgroundColor: '#ef4444',
+          color: 'white',
+          borderRadius: '50%',
+          width: 18,
+          height: 18,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 10,
+          fontWeight: 700
+        }}>
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
     </button>
   );
 }
@@ -425,6 +472,12 @@ function Icon({ name }) {
           <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.4" fill="none"/>
           <circle cx="8.5" cy="11.5" r="1.2" fill="currentColor"/>
           <rect x="11" y="9" width="6" height="4" rx="0.8" fill="currentColor"/>
+        </svg>
+      );
+    case 'notification':
+      return (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M12 2C11.172 2 10.5 2.672 10.5 3.5V4.19C8.13 4.86 6.5 7.03 6.5 9.5V14.5L4.5 16.5V17.5H19.5V16.5L17.5 14.5V9.5C17.5 7.03 15.87 4.86 13.5 4.19V3.5C13.5 2.672 12.828 2 12 2ZM10 19.5C10 20.605 10.895 21.5 12 21.5C13.105 21.5 14 20.605 14 19.5H10Z" fill="currentColor"/>
         </svg>
       );
     case 'apikey':
