@@ -536,3 +536,12 @@ export async function getApiUptimeStats(){
     return { error: e.message || "network_error" };
   }
 }
+
+export async function getUserStats(){
+  try{
+    const res = await fetch(`${API_BASE}/api/user/stats`, { headers: { ...authHeaders() } });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
