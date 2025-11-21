@@ -12,6 +12,7 @@ import Sidebar from './components/Sidebar';
 import Settings from './components/Settings';
 import Gambling from './components/Gambling';
 import Promocodes from './components/Promocodes';
+import ApiKeyPanel from './components/ApiKeyPanel';
 import { useTranslation } from 'react-i18next';
 
 let animId = 1;
@@ -161,6 +162,7 @@ export default function App() {
               {view === 'admin' && t('adminPanel')}
               {view === 'gambling' && t('gambling')}
               {view === 'promos' && 'Promocodes'}
+              {view === 'apikeys' && 'API Keys'}
             </h1>
           </div>
 
@@ -259,6 +261,10 @@ export default function App() {
 
           {user && view === 'gambling' && (
             <Gambling onBack={() => setView('market')} onActionComplete={handleActionComplete} />
+          )}
+
+          {user && view === 'apikeys' && (
+            <ApiKeyPanel />
           )}
         </main>
 
