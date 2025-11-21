@@ -10,6 +10,7 @@ import AdminPanel from './components/AdminPanel';
 import Leaderboard from './components/Leaderboard';
 import Sidebar from './components/Sidebar';
 import Settings from './components/Settings';
+import Notifications from './components/Notifications';
 import Gambling from './components/Gambling';
 import Promocodes from './components/Promocodes';
 import ApiKeyPanel from './components/ApiKeyPanel';
@@ -162,6 +163,7 @@ export default function App() {
               {view === 'admin' && t('adminPanel')}
               {view === 'gambling' && t('gambling')}
               {view === 'promos' && 'Promocodes'}
+              {view === 'notifications' && 'Notifications'}
               {view === 'apikeys' && 'API Keys'}
             </h1>
           </div>
@@ -261,6 +263,10 @@ export default function App() {
 
           {user && view === 'gambling' && (
             <Gambling onBack={() => setView('market')} onActionComplete={handleActionComplete} />
+          )}
+
+          {user && view === 'notifications' && (
+            <Notifications />
           )}
 
           {user && view === 'apikeys' && (
