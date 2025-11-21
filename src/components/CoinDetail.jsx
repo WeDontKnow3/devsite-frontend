@@ -19,6 +19,10 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
   const [estimatedUsd, setEstimatedUsd] = useState(null);
   const [topHolders, setTopHolders] = useState([]);
   const [loadingHolders, setLoadingHolders] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
 
   const prevPriceRef = useRef(null);
   const priceElRef = useRef(null);
@@ -41,6 +45,15 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
       setTopHolders(r?.holders || []);
     } catch { setTopHolders([]); }
     finally { setLoadingHolders(false); }
+  }
+
+  async function loadComments() {
+    setLoadingComments(true);
+    try {
+      const r = await api.getCoinComments(symbol);
+      setComments(r?.comments || []);
+    } catch { setComments([]); }
+    finally { setLoadingComments(false); }
   }
 
   async function load() {
@@ -71,7 +84,8 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
     load(); 
     loadHistory(); 
     loadUserData(); 
-    loadTopHolders(); 
+    loadTopHolders();
+    loadComments();
   }, [symbol]);
 
   useEffect(() => {
@@ -153,8 +167,52 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
     finally { setLoading(false); }
   }
 
+  async function postComment() {
+    if (!commentText.trim()) return;
+    setPostingComment(true);
+    try {
+      const res = await api.postCoinComment(symbol, commentText);
+      if (res?.ok) {
+        setCommentText('');
+        await loadComments();
+      } else {
+        setMsg(res?.error || 'Failed to post comment');
+      }
+    } catch (e) {
+      console.error(e);
+      setMsg('Failed to post comment');
+    } finally {
+      setPostingComment(false);
+    }
+  }
+
+  async function deleteComment(commentId) {
+    try {
+      const res = await api.deleteCoinComment(commentId);
+      if (res?.ok) {
+        await loadComments();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   function handleMaxBuy() { if(userBalance>0) setBuyUsd(userBalance.toString()); }
   function handleMaxSell() { if(userTokenAmount>0) setSellAmt(userTokenAmount.toString()); }
+
+  function formatTimeAgo(isoString) {
+    const now = new Date();
+    const past = new Date(isoString);
+    const diffMs = now - past;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  }
 
   return (
     <div className="page">
@@ -249,6 +307,93 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
                       <div style={{fontSize:'.85em', color:'#aaa'}}>
                         {holder.percentage?`${holder.percentage.toFixed(2)}%`:'—'}
                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <h3>Comments</h3>
+            <div style={{marginBottom:16}}>
+              <textarea
+                placeholder="Share your thoughts..."
+                value={commentText}
+                onChange={e=>setCommentText(e.target.value)}
+                disabled={postingComment}
+                style={{
+                  width:'100%',
+                  minHeight:'80px',
+                  padding:'12px',
+                  background:'#1a1a1a',
+                  border:'1px solid #333',
+                  borderRadius:'8px',
+                  color:'#fff',
+                  fontSize:'14px',
+                  resize:'vertical',
+                  fontFamily:'inherit'
+                }}
+                maxLength={500}
+              />
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:8}}>
+                <span style={{fontSize:'.85em',color:'#666'}}>{commentText.length}/500</span>
+                <button 
+                  className="btn" 
+                  onClick={postComment}
+                  disabled={postingComment || !commentText.trim()}
+                  style={{padding:'8px 16px'}}
+                >
+                  {postingComment ? 'Posting...' : 'Post Comment'}
+                </button>
+              </div>
+            </div>
+
+            {loadingComments && <div style={{color:'#aaa',fontSize:'.9em',textAlign:'center',padding:'20px'}}>Loading comments...</div>}
+            
+            {!loadingComments && comments.length === 0 && (
+              <div style={{color:'#666',fontSize:'.9em',textAlign:'center',padding:'20px'}}>
+                No comments yet. Be the first to share your thoughts!
+              </div>
+            )}
+
+            {!loadingComments && comments.length > 0 && (
+              <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+                {comments.map(comment => (
+                  <div 
+                    key={comment.id}
+                    style={{
+                      background:'#1a1a1a',
+                      padding:'12px',
+                      borderRadius:'8px',
+                      border:'1px solid #333'
+                    }}
+                  >
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:8}}>
+                      <div>
+                        <span style={{fontWeight:600,color:'#4CAF50'}}>{comment.username}</span>
+                        <span style={{marginLeft:8,fontSize:'.85em',color:'#666'}}>
+                          {formatTimeAgo(comment.created_at)}
+                        </span>
+                      </div>
+                      {comment.can_delete && (
+                        <button
+                          onClick={() => deleteComment(comment.id)}
+                          style={{
+                            background:'none',
+                            border:'none',
+                            color:'#ff4444',
+                            cursor:'pointer',
+                            fontSize:'.85em',
+                            padding:'4px 8px'
+                          }}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <div style={{color:'#ddd',fontSize:'.95em',whiteSpace:'pre-wrap',wordBreak:'break-word'}}>
+                      {comment.text}
                     </div>
                   </div>
                 ))}
