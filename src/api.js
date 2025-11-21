@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "https://devsite-backend-production.up.railway.app";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 function authHeaders(){
   const t = localStorage.getItem("token");
@@ -209,6 +209,52 @@ export async function adminUpdatePromoCode(id, payload){
       method: "PUT",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify(payload)
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function createApiKey(name){
+  try{
+    const res = await fetch(`${API_BASE}/api/apikeys`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ name })
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function listApiKeys(){
+  try{
+    const res = await fetch(`${API_BASE}/api/apikeys`, { headers: { ...authHeaders() } });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function deleteApiKey(id){
+  try{
+    const res = await fetch(`${API_BASE}/api/apikeys/${id}`, {
+      method: "DELETE",
+      headers: { ...authHeaders() }
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function resetApiKeyUsage(id){
+  try{
+    const res = await fetch(`${API_BASE}/api/apikeys/${id}/reset`, {
+      method: "POST",
+      headers: { ...authHeaders() }
     });
     return await safeJson(res);
   }catch(e){
