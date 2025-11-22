@@ -51,10 +51,8 @@ export default function Hopium({ onActionComplete }) {
 
   async function handleCreate() {
     if (!newQuestion.trim() || !aiAnalysis || creating) return;
-    
-    const confirm = window.confirm('Creating a Hopium question costs $100,000. Continue?');
-    if (!confirm) return;
-
+    const confirmCreate = window.confirm('Creating a Hopium question costs $100,000. Continue?');
+    if (!confirmCreate) return;
     setCreating(true);
     try {
       const res = await api.createHopiumQuestion({
@@ -82,13 +80,11 @@ export default function Hopium({ onActionComplete }) {
 
   async function handleVote(questionId, vote, betAmount) {
     if (voting[questionId]) return;
-    
     const amount = parseFloat(betAmount);
     if (!amount || amount < 1 || amount > 1000000) {
       alert('Bet must be between $1 and $1,000,000');
       return;
     }
-
     setVoting(v => ({ ...v, [questionId]: true }));
     try {
       const res = await api.voteHopiumQuestion(questionId, vote, amount);
@@ -113,12 +109,9 @@ export default function Hopium({ onActionComplete }) {
     const now = new Date();
     const expires = new Date(expiresAt);
     const diff = expires - now;
-    
     if (diff <= 0) return 'Expired';
-    
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    
     if (days > 0) return `${days}d ${hours}h`;
     return `${hours}h`;
   }
@@ -126,7 +119,6 @@ export default function Hopium({ onActionComplete }) {
   function calculateMultiplier(totalYes, totalNo, userVote) {
     const total = totalYes + totalNo;
     if (total === 0) return 1;
-    
     if (userVote === 'yes') {
       const yesPercent = (totalYes / total) * 100;
       return Math.max(1, 100 / yesPercent);
@@ -146,16 +138,12 @@ export default function Hopium({ onActionComplete }) {
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      <div className="card fade-in" style={{ 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        color: 'white',
-        marginBottom: '2rem'
-      }}>
+      <div className="card fade-in" style={{ marginBottom: '2rem' }}>
         <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem' }}>🔮 Create Hopium Question</h2>
         <p style={{ opacity: 0.9, marginBottom: '1.5rem' }}>
           Cost: <strong>$100,000</strong> | Min Bet: $1 | Max Bet: $1,000,000
         </p>
-        
+
         <textarea
           style={{
             width: '100%',
@@ -165,7 +153,6 @@ export default function Hopium({ onActionComplete }) {
             fontSize: '1rem',
             marginBottom: '1rem',
             resize: 'vertical',
-            color: '#000',
             fontFamily: 'inherit'
           }}
           placeholder="e.g., Will BTC coin reach $0.1 within 7 days?"
@@ -177,26 +164,16 @@ export default function Hopium({ onActionComplete }) {
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <button
-            className="btn"
-            style={{ 
-              background: 'white',
-              color: '#667eea',
-              border: 'none'
-            }}
+            className="btn ghost"
             onClick={handleAnalyze}
             disabled={!newQuestion.trim() || analyzing}
           >
             {analyzing ? '🔄 Analyzing...' : '🤖 Analyze with AI'}
           </button>
-          
+
           {aiAnalysis && (
             <button
               className="btn"
-              style={{
-                background: '#10b981',
-                color: 'white',
-                border: 'none'
-              }}
               onClick={handleCreate}
               disabled={creating}
             >
@@ -208,7 +185,7 @@ export default function Hopium({ onActionComplete }) {
         {aiAnalysis && (
           <div style={{
             marginTop: '1.5rem',
-            background: 'rgba(255,255,255,0.1)',
+            background: 'rgba(255,255,255,0.02)',
             padding: '1.5rem',
             borderRadius: '8px'
           }}>
@@ -249,7 +226,7 @@ export default function Hopium({ onActionComplete }) {
 
       <div className="card fade-in">
         <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.8rem' }}>📊 Active Questions</h2>
-        
+
         {questions.length === 0 && (
           <div className="muted" style={{ textAlign: 'center', padding: '3rem' }}>
             No active Hopium questions yet. Be the first to create one!
@@ -267,14 +244,14 @@ export default function Hopium({ onActionComplete }) {
             const userVoted = q.user_vote;
 
             return (
-              <div key={q.id} className="market-item" style={{ 
+              <div key={q.id} className="market-item" style={{
                 opacity: isExpired ? 0.6 : 1,
                 flexDirection: 'column',
                 gap: '1rem'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
                   alignItems: 'flex-start',
                   gap: '1rem'
                 }}>
@@ -290,8 +267,8 @@ export default function Hopium({ onActionComplete }) {
                   borderRadius: '8px',
                   border: '1px solid var(--border)'
                 }}>
-                  <div className="muted" style={{ 
-                    fontSize: '0.9rem', 
+                  <div className="muted" style={{
+                    fontSize: '0.9rem',
                     fontWeight: 600,
                     marginBottom: '0.5rem'
                   }}>
@@ -353,7 +330,7 @@ export default function Hopium({ onActionComplete }) {
                       NO {noPercent.toFixed(1)}%
                     </div>
                   </div>
-                  
+
                   <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -415,11 +392,10 @@ export default function Hopium({ onActionComplete }) {
                       border: '1px solid var(--border)'
                     }}>
                       <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>
-                        Your vote: <strong>{userVoted.vote.toUpperCase()}</strong>
-                        {' '}with <strong>${parseFloat(userVoted.amount).toLocaleString()}</strong>
+                        Your vote: <strong>{userVoted.vote.toUpperCase()}</strong> with <strong>${parseFloat(userVoted.amount).toLocaleString()}</strong>
                       </p>
-                      <p style={{ 
-                        margin: '0.5rem 0', 
+                      <p style={{
+                        margin: '0.5rem 0',
                         fontSize: '0.9rem',
                         color: '#10b981',
                         fontWeight: 600
