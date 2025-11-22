@@ -52,9 +52,7 @@ export default function Hopium({ onActionComplete }) {
   async function handleCreate() {
     if (!newQuestion.trim() || !aiAnalysis || creating) return;
     
-    const confirm = window.confirm(
-      `Creating a Hopium question costs $100,000. Continue?`
-    );
+    const confirm = window.confirm('Creating a Hopium question costs $100,000. Continue?');
     if (!confirm) return;
 
     setCreating(true);
@@ -139,19 +137,37 @@ export default function Hopium({ onActionComplete }) {
   }
 
   if (loading) {
-    return <div className="hopium-loading">Loading Hopium questions...</div>;
+    return (
+      <div className="card fade-in" style={{ textAlign: 'center', padding: '3rem' }}>
+        <div className="muted" style={{ fontSize: '1.2rem' }}>Loading Hopium questions...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="hopium-container">
-      <div className="hopium-create-section">
-        <h2>🔮 Create Hopium Question</h2>
-        <p className="hopium-create-info">
+    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+      <div className="card fade-in" style={{ 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        marginBottom: '2rem'
+      }}>
+        <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem' }}>🔮 Create Hopium Question</h2>
+        <p style={{ opacity: 0.9, marginBottom: '1.5rem' }}>
           Cost: <strong>$100,000</strong> | Min Bet: $1 | Max Bet: $1,000,000
         </p>
         
         <textarea
-          className="hopium-question-input"
+          style={{
+            width: '100%',
+            padding: '1rem',
+            borderRadius: '8px',
+            border: 'none',
+            fontSize: '1rem',
+            marginBottom: '1rem',
+            resize: 'vertical',
+            color: '#000',
+            fontFamily: 'inherit'
+          }}
           placeholder="e.g., Will BTC coin reach $0.1 within 7 days?"
           value={newQuestion}
           onChange={e => setNewQuestion(e.target.value)}
@@ -159,9 +175,14 @@ export default function Hopium({ onActionComplete }) {
           rows={3}
         />
 
-        <div className="hopium-create-actions">
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <button
-            className="btn-analyze"
+            className="btn"
+            style={{ 
+              background: 'white',
+              color: '#667eea',
+              border: 'none'
+            }}
             onClick={handleAnalyze}
             disabled={!newQuestion.trim() || analyzing}
           >
@@ -170,7 +191,12 @@ export default function Hopium({ onActionComplete }) {
           
           {aiAnalysis && (
             <button
-              className="btn-create-hopium"
+              className="btn"
+              style={{
+                background: '#10b981',
+                color: 'white',
+                border: 'none'
+              }}
               onClick={handleCreate}
               disabled={creating}
             >
@@ -180,39 +206,57 @@ export default function Hopium({ onActionComplete }) {
         </div>
 
         {aiAnalysis && (
-          <div className="ai-analysis-result">
-            <h3>🤖 AI Analysis</h3>
-            <div className="analysis-chart">
-              <div className="chart-bar">
-                <div 
-                  className="chart-yes" 
-                  style={{ width: `${aiAnalysis.yes_chance}%` }}
-                >
-                  <span>YES {aiAnalysis.yes_chance}%</span>
-                </div>
-                <div 
-                  className="chart-no" 
-                  style={{ width: `${100 - aiAnalysis.yes_chance}%` }}
-                >
-                  <span>NO {100 - aiAnalysis.yes_chance}%</span>
-                </div>
+          <div style={{
+            marginTop: '1.5rem',
+            background: 'rgba(255,255,255,0.1)',
+            padding: '1.5rem',
+            borderRadius: '8px'
+          }}>
+            <h3 style={{ margin: '0 0 1rem 0' }}>🤖 AI Analysis</h3>
+            <div style={{
+              display: 'flex',
+              height: '60px',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              fontWeight: 600,
+              marginBottom: '1rem'
+            }}>
+              <div style={{
+                background: '#10b981',
+                width: `${aiAnalysis.yes_chance}%`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'width 0.3s'
+              }}>
+                YES {aiAnalysis.yes_chance}%
+              </div>
+              <div style={{
+                background: '#ef4444',
+                width: `${100 - aiAnalysis.yes_chance}%`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'width 0.3s'
+              }}>
+                NO {100 - aiAnalysis.yes_chance}%
               </div>
             </div>
-            <p className="analysis-reasoning">{aiAnalysis.reasoning}</p>
+            <p style={{ lineHeight: 1.6, opacity: 0.95, margin: 0 }}>{aiAnalysis.reasoning}</p>
           </div>
         )}
       </div>
 
-      <div className="hopium-questions-section">
-        <h2>📊 Active Questions</h2>
+      <div className="card fade-in">
+        <h2 style={{ margin: '0 0 1.5rem 0', fontSize: '1.8rem' }}>📊 Active Questions</h2>
         
         {questions.length === 0 && (
-          <div className="no-questions">
+          <div className="muted" style={{ textAlign: 'center', padding: '3rem' }}>
             No active Hopium questions yet. Be the first to create one!
           </div>
         )}
 
-        <div className="hopium-questions-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {questions.map(q => {
             const totalYes = parseFloat(q.total_yes || 0);
             const totalNo = parseFloat(q.total_no || 0);
@@ -223,61 +267,124 @@ export default function Hopium({ onActionComplete }) {
             const userVoted = q.user_vote;
 
             return (
-              <div key={q.id} className={`hopium-question-card ${isExpired ? 'expired' : ''}`}>
-                <div className="question-header">
-                  <h3>{q.question}</h3>
-                  <span className="question-time">
+              <div key={q.id} className="market-item" style={{ 
+                opacity: isExpired ? 0.6 : 1,
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'flex-start',
+                  gap: '1rem'
+                }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', flex: 1 }}>{q.question}</h3>
+                  <span className="muted" style={{ whiteSpace: 'nowrap' }}>
                     {isExpired ? '⏰ Expired' : `⏱️ ${formatTimeRemaining(q.expires_at)}`}
                   </span>
                 </div>
 
-                <div className="question-ai-prediction">
-                  <span className="ai-label">🤖 AI Prediction:</span>
-                  <div className="ai-mini-chart">
-                    <div 
-                      className="ai-yes-bar" 
-                      style={{ width: `${q.ai_yes_chance}%` }}
-                    >
+                <div style={{
+                  background: 'var(--glass)',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)'
+                }}>
+                  <div className="muted" style={{ 
+                    fontSize: '0.9rem', 
+                    fontWeight: 600,
+                    marginBottom: '0.5rem'
+                  }}>
+                    🤖 AI Prediction:
+                  </div>
+                  <div style={{
+                    background: 'rgba(148, 163, 184, 0.1)',
+                    height: '24px',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      background: 'linear-gradient(90deg, #10b981, #059669)',
+                      height: '100%',
+                      width: `${q.ai_yes_chance}%`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: 'white',
+                      transition: 'width 0.3s'
+                    }}>
                       {q.ai_yes_chance}%
                     </div>
                   </div>
                 </div>
 
-                <div className="question-voting">
-                  <div className="vote-stats">
-                    <div className="vote-bar">
-                      <div 
-                        className="vote-yes" 
-                        style={{ width: `${yesPercent}%` }}
-                      >
-                        YES {yesPercent.toFixed(1)}%
-                      </div>
-                      <div 
-                        className="vote-no" 
-                        style={{ width: `${noPercent}%` }}
-                      >
-                        NO {noPercent.toFixed(1)}%
-                      </div>
+                <div>
+                  <div style={{
+                    display: 'flex',
+                    height: '40px',
+                    borderRadius: '6px',
+                    overflow: 'hidden',
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    marginBottom: '0.5rem'
+                  }}>
+                    <div style={{
+                      background: '#10b981',
+                      width: `${yesPercent}%`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      transition: 'width 0.3s'
+                    }}>
+                      YES {yesPercent.toFixed(1)}%
                     </div>
-                    <div className="vote-amounts">
-                      <span className="yes-amount">${totalYes.toLocaleString()}</span>
-                      <span className="total-pool">Pool: ${totalPool.toLocaleString()}</span>
-                      <span className="no-amount">${totalNo.toLocaleString()}</span>
+                    <div style={{
+                      background: '#ef4444',
+                      width: `${noPercent}%`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      transition: 'width 0.3s'
+                    }}>
+                      NO {noPercent.toFixed(1)}%
                     </div>
+                  </div>
+                  
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '0.85rem',
+                    marginBottom: '1rem'
+                  }}>
+                    <span style={{ color: '#10b981', fontWeight: 600 }}>
+                      ${totalYes.toLocaleString()}
+                    </span>
+                    <span style={{ fontWeight: 600 }}>
+                      Pool: ${totalPool.toLocaleString()}
+                    </span>
+                    <span style={{ color: '#ef4444', fontWeight: 600 }}>
+                      ${totalNo.toLocaleString()}
+                    </span>
                   </div>
 
                   {!isExpired && !userVoted && (
-                    <div className="vote-actions">
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                       <input
                         type="number"
-                        className="bet-input"
+                        className="small-input"
                         placeholder="Bet amount"
                         min="1"
                         max="1000000"
                         id={`bet-${q.id}`}
+                        style={{ flex: 1, minWidth: '120px' }}
                       />
                       <button
-                        className="btn-vote-yes"
+                        className="btn"
+                        style={{ background: '#10b981', color: 'white', border: 'none' }}
                         onClick={() => {
                           const input = document.getElementById(`bet-${q.id}`);
                           handleVote(q.id, 'yes', input.value);
@@ -287,7 +394,8 @@ export default function Hopium({ onActionComplete }) {
                         Vote YES
                       </button>
                       <button
-                        className="btn-vote-no"
+                        className="btn"
+                        style={{ background: '#ef4444', color: 'white', border: 'none' }}
                         onClick={() => {
                           const input = document.getElementById(`bet-${q.id}`);
                           handleVote(q.id, 'no', input.value);
@@ -300,21 +408,37 @@ export default function Hopium({ onActionComplete }) {
                   )}
 
                   {userVoted && (
-                    <div className="user-vote-info">
-                      <p>
-                        Your vote: <strong>{userVoted.vote.toUpperCase()}</strong> 
+                    <div style={{
+                      background: 'var(--glass)',
+                      padding: '1rem',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border)'
+                    }}>
+                      <p style={{ margin: '0.5rem 0', fontSize: '0.9rem' }}>
+                        Your vote: <strong>{userVoted.vote.toUpperCase()}</strong>
                         {' '}with <strong>${parseFloat(userVoted.amount).toLocaleString()}</strong>
                       </p>
-                      <p className="potential-multiplier">
+                      <p style={{ 
+                        margin: '0.5rem 0', 
+                        fontSize: '0.9rem',
+                        color: '#10b981',
+                        fontWeight: 600
+                      }}>
                         Potential multiplier: <strong>{calculateMultiplier(totalYes, totalNo, userVoted.vote).toFixed(2)}x</strong>
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="question-footer">
-                  <span className="created-by">Created by {q.creator_username}</span>
-                  <span className="participants">{q.vote_count} participants</span>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid var(--border)',
+                  fontSize: '0.85rem'
+                }}>
+                  <span className="muted">Created by {q.creator_username}</span>
+                  <span className="muted">{q.vote_count} participants</span>
                 </div>
               </div>
             );
