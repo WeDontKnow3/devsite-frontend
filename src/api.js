@@ -554,3 +554,53 @@ export async function getPortfolioPnL(){
     return { error: e.message || "network_error" };
   }
 }
+
+export async function analyzeHopiumQuestion(question){
+  try{
+    const res = await fetch(`${API_BASE}/api/hopium/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ question })
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function createHopiumQuestion(payload){
+  try{
+    const res = await fetch(`${API_BASE}/api/hopium/questions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(payload)
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function listHopiumQuestions(){
+  try{
+    const res = await fetch(`${API_BASE}/api/hopium/questions`, { 
+      headers: { ...authHeaders() } 
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function voteHopiumQuestion(questionId, vote, amount){
+  try{
+    const res = await fetch(`${API_BASE}/api/hopium/questions/${questionId}/vote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ vote, amount })
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
