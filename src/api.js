@@ -545,3 +545,12 @@ export async function getUserStats(){
     return { error: e.message || "network_error" };
   }
 }
+
+export async function getPortfolioPnL(){
+  try{
+    const res = await fetch(`${API_BASE}/api/portfolio/pnl`, { headers: { ...authHeaders() } });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
