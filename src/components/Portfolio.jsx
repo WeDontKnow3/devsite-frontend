@@ -7,6 +7,7 @@ export default function Portfolio({ onActionComplete }) {
 
   const [me, setMe] = useState(null);
   const [txs, setTxs] = useState([]);
+  const [pnlData, setPnlData] = useState(null);
   const [sellAmounts, setSellAmounts] = useState({});
   const [msg, setMsg] = useState('');
   const [loadingSell, setLoadingSell] = useState(null);
@@ -31,6 +32,15 @@ export default function Portfolio({ onActionComplete }) {
       setTxs(tr.transactions || []);
     } catch (_) {
       setTxs([]);
+    }
+
+    try {
+      const pnl = await api.getPortfolioPnL();
+      if (pnl && !pnl.error) {
+        setPnlData(pnl);
+      }
+    } catch (_) {
+      setPnlData(null);
     }
   }
 
@@ -139,6 +149,9 @@ export default function Portfolio({ onActionComplete }) {
     }
   }
 
+  const totalPnL = pnlData ? pnlData.total_realized + pnlData.total_unrealized : 0;
+  const pnlColor = totalPnL >= 0 ? '#10b981' : '#ef4444';
+
   return (
     <div>
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10}}>
@@ -149,7 +162,7 @@ export default function Portfolio({ onActionComplete }) {
       {msg && <p className="msg">{msg}</p>}
 
       <div className="card">
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12}}>
           <div>
             <div className="small muted">{t('usdBalance')}</div>
             <div style={{fontWeight:800, fontSize:20}}>
@@ -164,10 +177,41 @@ export default function Portfolio({ onActionComplete }) {
             </div>
           </div>
         </div>
+
+        {pnlData && (
+          <div style={{
+            padding:12, 
+            background:'rgba(0,0,0,0.2)', 
+            borderRadius:6, 
+            marginBottom:12,
+            border:`1px solid ${totalPnL >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`
+          }}>
+            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8}}>
+              <div className="small muted">Total P&L</div>
+              <div style={{fontSize:18, fontWeight:800, color:pnlColor}}>
+                {totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)} USD
+              </div>
+            </div>
+            <div style={{display:'flex', gap:16, fontSize:12}}>
+              <div>
+                <span className="muted">Realized: </span>
+                <span style={{color: pnlData.total_realized >= 0 ? '#10b981' : '#ef4444', fontWeight:600}}>
+                  {pnlData.total_realized >= 0 ? '+' : ''}{pnlData.total_realized.toFixed(2)}
+                </span>
+              </div>
+              <div>
+                <span className="muted">Unrealized: </span>
+                <span style={{color: pnlData.total_unrealized >= 0 ? '#10b981' : '#ef4444', fontWeight:600}}>
+                  {pnlData.total_unrealized >= 0 ? '+' : ''}{pnlData.total_unrealized.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
         
         <button 
           className="btn" 
-          style={{marginTop:12, width:'100%'}}
+          style={{width:'100%'}}
           onClick={() => setShowTransferModal(true)}
         >
           Transfer Assets
@@ -299,33 +343,59 @@ export default function Portfolio({ onActionComplete }) {
           <div className="card muted">{t('noHoldings')}</div>
         )}
 
-        {me && me.tokens.map(tk => (
-          <div key={tk.symbol} className="card" style={{display:'flex', alignItems:'center', gap:12, justifyContent:'space-between'}}>
-            <div>
-              <div style={{fontWeight:800}}>{tk.symbol}</div>
-              <div className="muted">{tk.name}</div>
-              <div className="muted">
-                {t('amountLabel')}: {Number(tk.amount).toLocaleString()}
+        {me && me.tokens.map(tk => {
+          const tokenPnL = pnlData?.tokens?.find(t => t.symbol === tk.symbol);
+          const unrealizedPnL = tokenPnL ? tokenPnL.unrealized_pnl : 0;
+          const realizedPnL = tokenPnL ? tokenPnL.realized_pnl : 0;
+          const totalTokenPnL = unrealizedPnL + realizedPnL;
+          const pnlTokenColor = totalTokenPnL >= 0 ? '#10b981' : '#ef4444';
+
+          return (
+            <div key={tk.symbol} className="card" style={{marginBottom:8}}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8}}>
+                <div>
+                  <div style={{fontWeight:800}}>{tk.symbol}</div>
+                  <div className="muted">{tk.name}</div>
+                  <div className="muted">
+                    {t('amountLabel')}: {Number(tk.amount).toLocaleString()}
+                  </div>
+                  {tokenPnL && (
+                    <div style={{fontSize:11, marginTop:4}}>
+                      <div style={{color:pnlTokenColor, fontWeight:600}}>
+                        P&L: {totalTokenPnL >= 0 ? '+' : ''}{totalTokenPnL.toFixed(2)} USD
+                      </div>
+                      {tokenPnL.current_value > 0 && (
+                        <div className="muted">
+                          Value: ${tokenPnL.current_value.toFixed(2)} • 
+                          Cost: ${tokenPnL.avg_cost.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div style={{display:'flex', flexDirection:'column', gap:8, alignItems:'flex-end'}}>
+                  <div style={{display:'flex', gap:8, alignItems:'center'}}>
+                    <input
+                      className="small-input"
+                      placeholder={t('tokenPlaceholder')}
+                      value={sellAmounts[tk.symbol] || ''}
+                      onChange={e=>setSellAmounts({...sellAmounts, [tk.symbol]: e.target.value})}
+                      style={{width:80}}
+                    />
+                    <button
+                      className="btn"
+                      onClick={()=>sell(tk.symbol)}
+                      disabled={loadingSell && loadingSell !== tk.symbol}
+                    >
+                      {loadingSell === tk.symbol ? t('selling') : t('sellBtn')}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div style={{display:'flex', gap:8, alignItems:'center'}}>
-              <input
-                className="small-input"
-                placeholder={t('tokenPlaceholder')}
-                value={sellAmounts[tk.symbol] || ''}
-                onChange={e=>setSellAmounts({...sellAmounts, [tk.symbol]: e.target.value})}
-              />
-              <button
-                className="btn"
-                onClick={()=>sell(tk.symbol)}
-                disabled={loadingSell && loadingSell !== tk.symbol}
-              >
-                {loadingSell === tk.symbol ? t('selling') : t('sellBtn')}
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div style={{marginTop:14}}>
