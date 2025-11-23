@@ -219,13 +219,13 @@ export default function Market({ onOpenCoin, onActionComplete }) {
                 {logoUrl ? (
                   <img src={logoUrl} alt={c.symbol} style={{width:48,height:48,objectFit:'cover',borderRadius:8}} />
                 ) : (
-                  <div style={{width:48,height:48,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8,background:'linear-gradient(135deg,var(--accent),var(--accent-2))',fontWeight:800}}>
+                  <div style={{width:48,height:48,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8,background:'linear-gradient(135deg,var(--accent),var(--accent-2))',fontWeight:800,color:'#fff'}}>
                     {c.symbol.slice(0,3)}
                   </div>
                 )}
 
                 <div style={{display:'flex',flexDirection:'column'}}>
-                  <button className="link-btn" onClick={() => onOpenCoin(c.symbol)}>
+                  <button className="link-btn" onClick={() => onOpenCoin(c.symbol)} style={{ color: '#fff' }}>
                     {c.symbol}
                   </button>
                   <div className="name">{c.name}</div>
