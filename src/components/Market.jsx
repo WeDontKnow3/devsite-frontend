@@ -17,6 +17,7 @@ export default function Market({ onOpenCoin, onActionComplete }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('volume');
   const [currentPage, setCurrentPage] = useState(1);
+  const [theme, setTheme] = useState(typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') || '' : '');
 
   async function load() {
     setMsg('');
@@ -55,6 +56,15 @@ export default function Market({ onOpenCoin, onActionComplete }) {
     setFilteredCoins(result);
     setCurrentPage(1);
   }, [coins, searchQuery, sortBy]);
+
+  useEffect(() => {
+    const node = typeof document !== 'undefined' ? document.documentElement : null;
+    if (!node) return;
+    const update = () => setTheme(node.getAttribute('data-theme') || '');
+    const obs = new MutationObserver(() => update());
+    obs.observe(node, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
 
   const totalPages = Math.ceil(filteredCoins.length / COINS_PER_PAGE);
   const startIndex = (currentPage - 1) * COINS_PER_PAGE;
@@ -219,13 +229,13 @@ export default function Market({ onOpenCoin, onActionComplete }) {
                 {logoUrl ? (
                   <img src={logoUrl} alt={c.symbol} style={{width:48,height:48,objectFit:'cover',borderRadius:8}} />
                 ) : (
-                  <div style={{width:48,height:48,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8,background:'linear-gradient(135deg,var(--accent),var(--accent-2))',fontWeight:800,color:'#fff'}}>
+                  <div style={{width:48,height:48,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8,background:'linear-gradient(135deg,var(--accent),var(--accent-2))',fontWeight:800,color: theme === 'light' ? 'var(--text-primary)' : '#fff', WebkitTextStroke: theme === 'light' ? '0.9px rgba(0,0,0,0.6)' : '0', WebkitTextFillColor: theme === 'light' ? 'var(--text-primary)' : '#fff'}}>
                     {c.symbol.slice(0,3)}
                   </div>
                 )}
 
                 <div style={{display:'flex',flexDirection:'column'}}>
-                  <button className="link-btn" onClick={() => onOpenCoin(c.symbol)} style={{ color: '#fff' }}>
+                  <button className="link-btn" onClick={() => onOpenCoin(c.symbol)} style={{ color: theme === 'light' ? 'var(--text-primary)' : '#fff', WebkitTextStroke: theme === 'light' ? '0.9px rgba(0,0,0,0.6)' : '0', WebkitTextFillColor: theme === 'light' ? 'var(--text-primary)' : '#fff' }}>
                     {c.symbol}
                   </button>
                   <div className="name">{c.name}</div>
