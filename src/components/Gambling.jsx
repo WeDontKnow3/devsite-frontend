@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as api from '../api';
 
 const COIN_MIN_BET = 1;
-const COIN_MAX_BET = 1000000;
+const COIN_MAX_BET = 1000000000;
 const SLOTS_MIN_BET = 0.01;
-const SLOTS_MAX_BET = 10000000;
+const SLOTS_MAX_BET = 1000000000;
 const ANIM_DURATION = 1100;
 const SLOT_SPIN_DURATION = 2000;
 
