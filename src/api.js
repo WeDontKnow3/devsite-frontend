@@ -604,3 +604,42 @@ export async function voteHopiumQuestion(questionId, vote, amount){
     return { error: e.message || "network_error" };
   }
 }
+
+export async function minesStart(bet, bombs){
+  try{
+    const res = await fetch(`${API_BASE}/api/gambling/mines/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ bet: Number(bet), bombs: Number(bombs) })
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function minesReveal(gameId, index){
+  try{
+    const res = await fetch(`${API_BASE}/api/gambling/mines/reveal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ gameId, index: Number(index) })
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
+
+export async function minesCashout(gameId){
+  try{
+    const res = await fetch(`${API_BASE}/api/gambling/mines/cashout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ gameId })
+    });
+    return await safeJson(res);
+  }catch(e){
+    return { error: e.message || "network_error" };
+  }
+}
