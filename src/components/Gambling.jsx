@@ -608,8 +608,13 @@ export default function Gambling({ onBack, onActionComplete }) {
                   min={MINES_MIN_BOMBS}
                   max={MINES_MAX_BOMBS}
                   onChange={(e) => {
-                    const v = Number(e.target.value);
-                    if (v >= MINES_MIN_BOMBS && v <= MINES_MAX_BOMBS) setMinesBombs(v);
+                    const v = e.target.value;
+                    if (v === '') {
+                      setMinesBombs('');
+                      return;
+                    }
+                    const n = Number(v);
+                    if (!Number.isNaN(n)) setMinesBombs(n);
                   }}
                   disabled={processing}
                 />
