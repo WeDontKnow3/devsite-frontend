@@ -1,5 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
 export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   const [me, setMe] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +29,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   async function fetchMe() {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       if (!token) {
         setMe(null);
         setLoading(false);
@@ -56,7 +63,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
 
   async function fetchUnreadCount() {
     try {
-      const token = localStorage.getItem('token');
+      const token = getCookie('token');
       if (!token) return;
       
       const res = await fetch(`${import.meta.env.VITE_API_BASE || 'https://devsite-backend-production.up.railway.app'}/api/notifications/unread-count`, {
@@ -187,7 +194,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
   }
 
   function handleLogout() {
-    localStorage.removeItem('token');
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict';
     if (onLogout && typeof onLogout === 'function') onLogout();
     else window.location.reload();
   }
@@ -217,8 +224,8 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
         onClick={() => typeof setOpen === 'function' && setOpen(false)}
         style={{ display: window.innerWidth < 900 && open ? 'block' : 'none' }}
       />
-      <aside className={`sidebar ${open ? 'open' : 'closed'}`} aria-expanded={open} style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-        <div className="sidebar-top" style={{ flexShrink: 0 }}>
+      <aside className={`sidebar ${open ? 'open' : 'closed'}`} aria-expanded={open}>
+        <div className="sidebar-top">
           <div className="logo">ZT</div>
           <div className="sidebar-title">
             <div className="header-title">RUGPLICATE</div>
@@ -226,7 +233,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           </div>
         </div>
 
-        <nav className="sidebar-nav" style={{ flexShrink: 0 }}>
+        <nav className="sidebar-nav">
           <NavItem active={view === 'market'} label="Market" onClick={() => navigate('market')} icon="market" />
           <NavItem active={view === 'portfolio'} label="Portfolio" onClick={() => navigate('portfolio')} icon="portfolio" />
           <NavItem active={view === 'dashboard'} label="Dashboard" onClick={() => navigate('dashboard')} icon="dashboard" />
@@ -243,84 +250,26 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           )}
         </nav>
 
-        <div className="live-trades-card" style={{ margin: '10px 0', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexShrink: 0 }}>
-            <div style={{ fontWeight: 800 }}>Live Trades ($1k+)</div>
-            <div style={{ 
-              fontSize: 11, 
-              color: statusColors[wsStatus],
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4
-            }}>
-              <span style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                backgroundColor: statusColors[wsStatus],
-                display: 'inline-block',
-                animation: wsStatus === 'connected' ? 'pulse 2s infinite' : 'none'
-              }}></span>
+        <div className="live-trades-card">
+          <div className="live-trades-header">
+            <div className="live-trades-title">Live Trades ($1k+)</div>
+            <div className="live-trades-status">
+              <span className={`status-dot ${wsStatus}`}></span>
               {statusLabels[wsStatus]}
             </div>
           </div>
 
-          <div style={{ 
-            flex: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: 8,
-            paddingRight: 4,
-            minHeight: 0
-          }}>
+          <div className="live-trades-list">
             {trades.length === 0 ? (
-              <div className="muted" style={{ textAlign: 'center', padding: '20px 0', fontSize: 13 }}>
+              <div className="live-trades-empty">
                 {wsStatus === 'connected' ? 'Waiting for trades...' : 'Connecting to live feed...'}
               </div>
             ) : (
               trades.map((t, i) => (
-                <div 
-                  key={`${t.created_at}-${i}`} 
-                  style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    gap: 8,
-                    padding: '6px 8px',
-                    backgroundColor: t.side === 'buy' ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-                    borderRadius: 6,
-                    borderLeft: `3px solid ${t.side === 'buy' ? '#10b981' : '#ef4444'}`,
-                    animation: 'slideIn 0.3s ease-out',
-                    flexShrink: 0
-                  }}
-                >
-                  <div style={{ 
-                    minWidth: 60, 
-                    fontWeight: 700,
-                    fontSize: 13,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {t.coin}
-                  </div>
-                  <div style={{ 
-                    flex: 1, 
-                    fontSize: 12, 
-                    color: '#94a3b8',
-                    textTransform: 'uppercase',
-                    fontWeight: 600
-                  }}>
-                    {t.side}
-                  </div>
-                  <div style={{ 
-                    minWidth: 70, 
-                    textAlign: 'right', 
-                    fontWeight: 700,
-                    fontSize: 13,
-                    color: t.side === 'buy' ? '#10b981' : '#ef4444'
-                  }}>
+                <div key={`${t.created_at}-${i}`} className={`trade-item ${t.side}`}>
+                  <div className="trade-coin">{t.coin}</div>
+                  <div className="trade-side">{t.side}</div>
+                  <div className="trade-amount">
                     ${Number(t.usdAmount).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
                 </div>
@@ -329,7 +278,7 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           </div>
         </div>
 
-        <div className="sidebar-bottom" style={{ flexShrink: 0 }}>
+        <div className="sidebar-bottom">
           {me ? (
             <>
               <div className="sidebar-user">
@@ -355,6 +304,201 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
       </aside>
 
       <style>{`
+        .sidebar {
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          overflow: hidden;
+        }
+
+        .sidebar-top {
+          flex-shrink: 0;
+          padding: 1rem;
+        }
+
+        .sidebar-nav {
+          flex-shrink: 0;
+          overflow-y: auto;
+          max-height: 40vh;
+          padding: 0.5rem 0;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+          background: rgba(148, 163, 184, 0.1);
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+          background: rgba(148, 163, 184, 0.3);
+          border-radius: 3px;
+        }
+
+        .live-trades-card {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          margin: 10px;
+          padding: 12px;
+          background: rgba(148, 163, 184, 0.05);
+          border-radius: 8px;
+          min-height: 200px;
+          max-height: 400px;
+          overflow: hidden;
+        }
+
+        @media (max-height: 800px) {
+          .live-trades-card {
+            max-height: 250px;
+            min-height: 150px;
+          }
+        }
+
+        @media (max-height: 600px) {
+          .live-trades-card {
+            max-height: 180px;
+            min-height: 120px;
+          }
+        }
+
+        .live-trades-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+          flex-shrink: 0;
+        }
+
+        .live-trades-title {
+          font-weight: 800;
+          font-size: 13px;
+        }
+
+        .live-trades-status {
+          font-size: 11px;
+          color: #94a3b8;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+
+        .status-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        .status-dot.connected {
+          background-color: #10b981;
+          animation: pulse 2s infinite;
+        }
+
+        .status-dot.connecting {
+          background-color: #f59e0b;
+        }
+
+        .status-dot.disconnected,
+        .status-dot.error {
+          background-color: #ef4444;
+        }
+
+        .live-trades-list {
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding-right: 4px;
+          min-height: 0;
+        }
+
+        .live-trades-list::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .live-trades-list::-webkit-scrollbar-track {
+          background: rgba(148, 163, 184, 0.1);
+          border-radius: 3px;
+        }
+
+        .live-trades-list::-webkit-scrollbar-thumb {
+          background: rgba(148, 163, 184, 0.3);
+          border-radius: 3px;
+        }
+
+        .live-trades-list::-webkit-scrollbar-thumb:hover {
+          background: rgba(148, 163, 184, 0.5);
+        }
+
+        .live-trades-empty {
+          text-align: center;
+          padding: 20px 0;
+          font-size: 13px;
+          color: #94a3b8;
+        }
+
+        .trade-item {
+          display: flex;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 6px 8px;
+          border-radius: 6px;
+          border-left: 3px solid;
+          animation: slideIn 0.3s ease-out;
+          flex-shrink: 0;
+        }
+
+        .trade-item.buy {
+          background-color: rgba(16, 185, 129, 0.08);
+          border-left-color: #10b981;
+        }
+
+        .trade-item.sell {
+          background-color: rgba(239, 68, 68, 0.08);
+          border-left-color: #ef4444;
+        }
+
+        .trade-coin {
+          min-width: 60px;
+          font-weight: 700;
+          font-size: 13px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .trade-side {
+          flex: 1;
+          font-size: 12px;
+          color: #94a3b8;
+          text-transform: uppercase;
+          font-weight: 600;
+        }
+
+        .trade-amount {
+          min-width: 70px;
+          text-align: right;
+          font-weight: 700;
+          font-size: 13px;
+        }
+
+        .trade-item.buy .trade-amount {
+          color: #10b981;
+        }
+
+        .trade-item.sell .trade-amount {
+          color: #ef4444;
+        }
+
+        .sidebar-bottom {
+          flex-shrink: 0;
+          padding: 1rem;
+        }
+
         @keyframes slideIn {
           from {
             opacity: 0;
@@ -375,22 +519,14 @@ export default function Sidebar({ view, onNavigate, onLogout, open, setOpen }) {
           }
         }
 
-        .live-trades-card > div:last-child::-webkit-scrollbar {
-          width: 6px;
-        }
-
-        .live-trades-card > div:last-child::-webkit-scrollbar-track {
-          background: rgba(148, 163, 184, 0.1);
-          border-radius: 3px;
-        }
-
-        .live-trades-card > div:last-child::-webkit-scrollbar-thumb {
-          background: rgba(148, 163, 184, 0.3);
-          border-radius: 3px;
-        }
-
-        .live-trades-card > div:last-child::-webkit-scrollbar-thumb:hover {
-          background: rgba(148, 163, 184, 0.5);
+        @media (max-width: 900px) {
+          .sidebar-nav {
+            max-height: none;
+          }
+          
+          .live-trades-card {
+            max-height: 300px;
+          }
         }
       `}</style>
     </>
