@@ -14,34 +14,34 @@ export default function PriceChart({ series = [] }) {
         if (!mounted || !containerRef.current) return;
         const chart = createChart(containerRef.current, {
           width: containerRef.current.clientWidth,
-          height: 280,
+          height: 300,
           layout: {
-            background: { type: 'solid', color: '#0d1117' },
-            textColor: '#8b92a7'
+            background: { type: 'solid', color: '#000000' },
+            textColor: '#787b86'
           },
           grid: {
-            vertLines: { color: 'rgba(42, 46, 57, 0.5)' },
-            horzLines: { color: 'rgba(42, 46, 57, 0.5)' }
+            vertLines: { color: '#1e222d', style: 0 },
+            horzLines: { color: '#1e222d', style: 0 }
           },
           crosshair: {
             mode: 1,
             vertLine: {
               width: 1,
-              color: 'rgba(138, 146, 167, 0.3)',
-              style: 2,
-              labelBackgroundColor: '#2a2e39'
+              color: '#787b86',
+              style: 3,
+              labelBackgroundColor: '#363a45'
             },
             horzLine: {
               width: 1,
-              color: 'rgba(138, 146, 167, 0.3)',
-              style: 2,
-              labelBackgroundColor: '#2a2e39'
+              color: '#787b86',
+              style: 3,
+              labelBackgroundColor: '#363a45'
             }
           },
           rightPriceScale: {
             visible: true,
-            borderColor: '#2a2e39',
-            textColor: '#8b92a7',
+            borderColor: '#2b2b43',
+            textColor: '#787b86',
             scaleMargins: {
               top: 0.1,
               bottom: 0.1
@@ -50,20 +50,20 @@ export default function PriceChart({ series = [] }) {
           timeScale: {
             timeVisible: true,
             secondsVisible: false,
-            borderColor: '#2a2e39',
-            textColor: '#8b92a7'
+            borderColor: '#2b2b43',
+            textColor: '#787b86'
           }
         });
 
         const candlestickSeries = chart.addCandlestickSeries({
-          upColor: '#26a69a',
-          downColor: '#ef5350',
-          borderUpColor: '#26a69a',
-          borderDownColor: '#ef5350',
-          wickUpColor: '#26a69a',
-          wickDownColor: '#ef5350',
+          upColor: '#089981',
+          downColor: '#f23645',
+          borderUpColor: '#089981',
+          borderDownColor: '#f23645',
+          wickUpColor: '#089981',
+          wickDownColor: '#f23645',
           priceLineVisible: false,
-          borderVisible: true
+          borderVisible: false
         });
 
         const setData = (s) => {
@@ -113,8 +113,8 @@ export default function PriceChart({ series = [] }) {
 
   if (!useFallback) {
     return (
-      <div style={{ width: '100%', height: 280, position: 'relative' }}>
-        <div ref={containerRef} style={{ width: '100%', height: 280 }} />
+      <div style={{ width: '100%', height: 300, position: 'relative' }}>
+        <div ref={containerRef} style={{ width: '100%', height: 300 }} />
       </div>
     );
   }
@@ -122,16 +122,16 @@ export default function PriceChart({ series = [] }) {
   const points = series.filter(p => p.close != null);
   if (points.length === 0) {
     return (
-      <div style={{ padding: 18, borderRadius: 10, background: 'rgba(255,255,255,0.02)', color: '#cfe6ff' }}>
-        Sem dados para mostrar.
-        {libErrorMsg ? <div style={{fontSize:12, marginTop:6, color:'#fca5a5'}}>lightweight-charts erro: {libErrorMsg}</div> : null}
+      <div style={{ padding: 18, borderRadius: 8, background: '#000000', color: '#787b86', border: '1px solid #1e222d' }}>
+        No data available
+        {libErrorMsg ? <div style={{fontSize:12, marginTop:6, color:'#f23645'}}>Error: {libErrorMsg}</div> : null}
       </div>
     );
   }
 
   const w = containerRef.current ? containerRef.current.clientWidth : 760;
-  const h = 280;
-  const padding = { left: 60, right: 10, top: 12, bottom: 30 };
+  const h = 300;
+  const padding = { left: 60, right: 10, top: 15, bottom: 30 };
   const innerW = Math.max(10, w - padding.left - padding.right);
   const innerH = Math.max(10, h - padding.top - padding.bottom);
 
@@ -142,7 +142,8 @@ export default function PriceChart({ series = [] }) {
   const range = maxP - minP || maxP || 1;
 
   const candleSpacing = innerW / sorted.length;
-  const candleWidth = Math.max(2, Math.min(12, candleSpacing * 0.8));
+  const candleWidth = Math.max(3, Math.min(16, candleSpacing * 0.85));
+  const wickWidth = Math.max(1, candleWidth * 0.12);
 
   function priceToY(price) {
     const ratio = (Number(price) - minP) / range;
@@ -160,25 +161,32 @@ export default function PriceChart({ series = [] }) {
   
   function handleMouseLeave() { setHover(null); }
 
-  const ticks = 4;
+  const ticks = 5;
   const tickVals = Array.from({length: ticks+1}, (_,i) => minP + (i/ticks)*range).reverse();
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: h, position: 'relative', borderRadius: 8, overflow: 'hidden', background: '#0d1117' }}>
+    <div ref={containerRef} style={{ width: '100%', height: h, position: 'relative', background: '#000000', border: '1px solid #2b2b43' }}>
       <svg width={w} height={h} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} style={{display:'block'}}>
-        <rect width={w} height={h} fill="#0d1117"/>
+        <rect width={w} height={h} fill="#000000"/>
         
         <g>
           {tickVals.map((v,i) => {
             const ty = padding.top + (i / ticks) * innerH;
             return (
               <g key={i}>
-                <line x1={padding.left} x2={w - padding.right} y1={ty} y2={ty} stroke="rgba(42, 46, 57, 0.5)" strokeWidth={1} />
-                <text x={padding.left - 8} y={ty+4} fontSize={11} fill="#8b92a7" textAnchor="end">{Number(v).toFixed(6)}</text>
+                <line x1={padding.left} x2={w - padding.right} y1={ty} y2={ty} stroke="#1e222d" strokeWidth={1} />
+                <text x={padding.left - 8} y={ty+4} fontSize={11} fill="#787b86" textAnchor="end" fontFamily="Arial, sans-serif">{Number(v).toFixed(6)}</text>
               </g>
             );
           })}
         </g>
+
+        {Array.from({length: Math.floor(sorted.length / 10)}).map((_, i) => {
+          const x = padding.left + (i * 10 + 5) * candleSpacing;
+          return (
+            <line key={i} x1={x} x2={x} y1={padding.top} y2={h - padding.bottom} stroke="#1e222d" strokeWidth={1} />
+          );
+        })}
 
         {sorted.map((candle, i) => {
           const x = padding.left + (i + 0.5) * candleSpacing;
@@ -188,22 +196,21 @@ export default function PriceChart({ series = [] }) {
           const yLow = priceToY(candle.low);
           
           const isUp = candle.close >= candle.open;
-          const color = isUp ? '#26a69a' : '#ef5350';
+          const color = isUp ? '#089981' : '#f23645';
           const bodyTop = Math.min(yOpen, yClose);
-          const bodyHeight = Math.max(1.5, Math.abs(yClose - yOpen));
+          const bodyHeight = Math.max(2, Math.abs(yClose - yOpen));
 
           const isHovered = hover?.idx === i;
 
           return (
-            <g key={i}>
+            <g key={i} opacity={isHovered ? 1 : 0.95}>
               <line 
                 x1={x} 
                 x2={x} 
                 y1={yHigh} 
                 y2={yLow} 
                 stroke={color} 
-                strokeWidth={1.5}
-                opacity={isHovered ? 1 : 0.95}
+                strokeWidth={wickWidth}
               />
               <rect 
                 x={x - candleWidth / 2} 
@@ -211,67 +218,63 @@ export default function PriceChart({ series = [] }) {
                 width={candleWidth} 
                 height={bodyHeight} 
                 fill={color}
-                stroke={color}
-                strokeWidth={0.5}
-                opacity={isHovered ? 1 : 0.95}
               />
             </g>
           );
         })}
 
         {hover && (
-          <>
-            <line 
-              x1={hover.x} 
-              x2={hover.x}
-              y1={padding.top} 
-              y2={h - padding.bottom} 
-              stroke="rgba(138, 146, 167, 0.3)" 
-              strokeWidth={1}
-              strokeDasharray="3,3"
-            />
-          </>
+          <line 
+            x1={hover.x} 
+            x2={hover.x}
+            y1={padding.top} 
+            y2={h - padding.bottom} 
+            stroke="#787b86" 
+            strokeWidth={1}
+            strokeDasharray="4,4"
+            opacity={0.5}
+          />
         )}
       </svg>
 
       {hover && (
         <div style={{
           position:'absolute', 
-          left: Math.min(w - 210, Math.max(10, hover.x + 10)), 
-          top: 10,
-          background: 'rgba(13, 17, 23, 0.95)', 
-          color:'#d1e6ff', 
-          padding:'10px 12px', 
-          borderRadius:6, 
+          left: hover.x < w / 2 ? hover.x + 15 : hover.x - 195, 
+          top: 20,
+          background: '#1e222d', 
+          color:'#d1d4dc', 
+          padding:'8px 10px', 
+          borderRadius:4, 
           fontSize:12, 
           pointerEvents:'none', 
-          boxShadow:'0 4px 12px rgba(0,0,0,0.6)',
-          border: '1px solid rgba(138, 146, 167, 0.2)',
-          minWidth: 180
+          boxShadow:'0 2px 8px rgba(0,0,0,0.8)',
+          fontFamily: 'Arial, sans-serif',
+          minWidth: 150
         }}>
-          <div style={{fontSize:10, color:'#8b92a7', marginBottom:8}}>
-            {new Date(hover.item.time).toLocaleString()}
+          <div style={{fontSize:10, color:'#787b86', marginBottom:6}}>
+            {new Date(hover.item.time).toLocaleString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
           </div>
-          <div style={{display:'flex', justifyContent:'space-between', marginBottom:3}}>
-            <span style={{color:'#8b92a7'}}>O</span>
-            <span style={{fontWeight:600}}>{hover.item.open}</span>
+          <div style={{display:'flex', justifyContent:'space-between', marginBottom:2, fontSize:11}}>
+            <span style={{color:'#787b86', marginRight:10}}>O</span>
+            <span style={{fontWeight:500}}>{hover.item.open}</span>
           </div>
-          <div style={{display:'flex', justifyContent:'space-between', marginBottom:3}}>
-            <span style={{color:'#8b92a7'}}>H</span>
-            <span style={{fontWeight:600, color:'#26a69a'}}>{hover.item.high}</span>
+          <div style={{display:'flex', justifyContent:'space-between', marginBottom:2, fontSize:11}}>
+            <span style={{color:'#787b86', marginRight:10}}>H</span>
+            <span style={{fontWeight:500}}>{hover.item.high}</span>
           </div>
-          <div style={{display:'flex', justifyContent:'space-between', marginBottom:3}}>
-            <span style={{color:'#8b92a7'}}>L</span>
-            <span style={{fontWeight:600, color:'#ef5350'}}>{hover.item.low}</span>
+          <div style={{display:'flex', justifyContent:'space-between', marginBottom:2, fontSize:11}}>
+            <span style={{color:'#787b86', marginRight:10}}>L</span>
+            <span style={{fontWeight:500}}>{hover.item.low}</span>
           </div>
-          <div style={{display:'flex', justifyContent:'space-between'}}>
-            <span style={{color:'#8b92a7'}}>C</span>
-            <span style={{fontWeight:600}}>{hover.item.close}</span>
+          <div style={{display:'flex', justifyContent:'space-between', marginBottom:6, fontSize:11}}>
+            <span style={{color:'#787b86', marginRight:10}}>C</span>
+            <span style={{fontWeight:500}}>{hover.item.close}</span>
           </div>
-          <div style={{marginTop:8, paddingTop:8, borderTop:'1px solid rgba(138, 146, 167, 0.2)', fontSize:11}}>
+          <div style={{fontSize:11, textAlign:'right'}}>
             <span style={{
               fontWeight:600, 
-              color: hover.item.close >= hover.item.open ? '#26a69a' : '#ef5350'
+              color: hover.item.close >= hover.item.open ? '#089981' : '#f23645'
             }}>
               {hover.item.close >= hover.item.open ? '+' : ''}
               {((hover.item.close - hover.item.open) / hover.item.open * 100).toFixed(2)}%
