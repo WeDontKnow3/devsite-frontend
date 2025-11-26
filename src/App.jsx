@@ -46,6 +46,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dailyStatus, setDailyStatus] = useState(null);
   const [claimingDaily, setClaimingDaily] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   async function loadMe() {
     try {
@@ -53,13 +54,16 @@ export default function App() {
       if (res && res.user) {
         setUser(res.user);
         setBalance(Number(res.user.usd_balance));
+        return true;
       } else {
         setUser(null);
         setBalance(null);
+        return false;
       }
     } catch (err) {
       setUser(null);
       setBalance(null);
+      return false;
     }
   }
 
@@ -75,7 +79,11 @@ export default function App() {
   useEffect(() => {
     const token = getCookie('token');
     if (token) {
-      loadMe();
+      loadMe().finally(() => {
+        setInitializing(false);
+      });
+    } else {
+      setInitializing(false);
     }
   }, []);
 
@@ -157,6 +165,40 @@ export default function App() {
     const minutes = Math.floor((seconds % 3600) / 60);
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
+  }
+
+  if (initializing) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: 'var(--bg-primary, #0f172a)',
+        color: 'var(--text-primary, #e2e8f0)'
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid rgba(226, 232, 240, 0.1)',
+            borderTopColor: '#3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      </div>
+    );
   }
 
   return (
