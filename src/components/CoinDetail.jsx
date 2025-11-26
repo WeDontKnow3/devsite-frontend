@@ -26,6 +26,7 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
 
   const prevPriceRef = useRef(null);
   const priceElRef = useRef(null);
+  const wsRef = useRef(null);
 
   async function loadUserData() {
     try {
@@ -86,6 +87,85 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
     loadUserData(); 
     loadTopHolders();
     loadComments();
+  }, [symbol]);
+
+  useEffect(() => {
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.host;
+    const wsUrl = `${wsProtocol}//${wsHost}`;
+    
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('WebSocket connected for real-time updates');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'trade' && data.coin === symbol) {
+          const newCandle = {
+            time: data.created_at,
+            open: Number(data.price),
+            high: Number(data.price),
+            low: Number(data.price),
+            close: Number(data.price)
+          };
+
+          setHistory(prev => {
+            const updated = [...prev];
+            if (updated.length > 0) {
+              const lastCandle = updated[updated.length - 1];
+              const timeDiff = new Date(newCandle.time).getTime() - new Date(lastCandle.time).getTime();
+              
+              if (timeDiff < 5 * 60 * 1000) {
+                lastCandle.close = newCandle.close;
+                lastCandle.high = Math.max(lastCandle.high, newCandle.close);
+                lastCandle.low = Math.min(lastCandle.low, newCandle.close);
+              } else {
+                updated.push(newCandle);
+              }
+            } else {
+              updated.push(newCandle);
+            }
+            
+            if (updated.length > 150) {
+              return updated.slice(-150);
+            }
+            
+            return updated;
+          });
+
+          setCoin(prev => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              price: data.price,
+              pool_base: prev.pool_base,
+              pool_token: prev.pool_token
+            };
+          });
+        }
+      } catch (err) {
+        console.error('WebSocket message error:', err);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
   }, [symbol]);
 
   useEffect(() => {
