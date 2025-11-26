@@ -92,7 +92,7 @@ export default function CoinDetail({ symbol, onBack, onActionComplete }) {
   useEffect(() => {
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = window.location.host;
-    const wsUrl = `${wsProtocol}//${wsHost}`;
+    const wsUrl = "wss://devsite-backend-production.up.railway.app";
     
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
