@@ -141,8 +141,9 @@ export default function PriceChart({ series = [] }) {
   const maxP = Math.max(...allPrices);
   const range = maxP - minP || maxP || 1;
 
-  const candleSpacing = innerW / sorted.length;
-  const candleWidth = Math.max(6, Math.min(24, candleSpacing * 0.75));
+  const candleWidth = Math.max(8, Math.min(20, innerW / sorted.length));
+  const gapWidth = Math.max(1, candleWidth * 0.15);
+  const totalCandleWidth = candleWidth + gapWidth;
   const wickWidth = Math.max(1.5, candleWidth * 0.15);
 
   function priceToY(price) {
@@ -153,9 +154,10 @@ export default function PriceChart({ series = [] }) {
   function handleMouseMove(e) {
     const rect = e.currentTarget.getBoundingClientRect();
     const mx = e.clientX - rect.left;
-    const idx = Math.floor((mx - padding.left) / candleSpacing);
+    const relativeX = mx - padding.left;
+    const idx = Math.floor(relativeX / totalCandleWidth);
     if (idx >= 0 && idx < sorted.length) {
-      setHover({ idx, item: sorted[idx], x: padding.left + (idx + 0.5) * candleSpacing });
+      setHover({ idx, item: sorted[idx], x: padding.left + idx * totalCandleWidth + candleWidth / 2 });
     }
   }
   
@@ -180,7 +182,7 @@ export default function PriceChart({ series = [] }) {
         </g>
 
         {sorted.map((candle, i) => {
-          const x = padding.left + (i + 0.5) * candleSpacing;
+          const x = padding.left + i * totalCandleWidth + candleWidth / 2;
           const yOpen = priceToY(candle.open);
           const yClose = priceToY(candle.close);
           const yHigh = priceToY(candle.high);
@@ -277,7 +279,7 @@ export default function PriceChart({ series = [] }) {
       )}
 
       <div style={{ position:'absolute', left:15, bottom:10, color:'#9fb0d4', fontSize:11 }}>
-        {libErrorMsg ? 'fallback mode' : '1 minute candles'}
+        {libErrorMsg ? 'fallback mode' : 'candlesticks'}
       </div>
     </div>
   );
