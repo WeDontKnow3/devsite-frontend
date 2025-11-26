@@ -3,15 +3,18 @@ import ReCAPTCHA from 'react-google-recaptcha';
 import * as api from '../api';
 import { useTranslation } from 'react-i18next';
 
+function setCookie(name, value, days = 30) {
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Strict`;
+}
+
 export default function Auth({ onLogin }) {
   const { t } = useTranslation();
-
   const [mode, setMode] = useState('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [msg, setMsg] = useState('');
   const [captchaToken, setCaptchaToken] = useState(null);
-
   const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITEKEY;
 
   async function submit(e) {
@@ -21,6 +24,7 @@ export default function Auth({ onLogin }) {
       if (mode === 'login') {
         const res = await api.login(username, password);
         if (res && res.token) {
+          setCookie('token', res.token, 30);
           onLogin(res.token);
           setMsg(t('loggedIn'));
         } else {
@@ -33,6 +37,7 @@ export default function Auth({ onLogin }) {
         }
         const res = await api.register(username, password, captchaToken);
         if (res && res.token) {
+          setCookie('token', res.token, 30);
           onLogin(res.token);
           setMsg(t('registeredLoggedIn'));
         } else {
@@ -53,7 +58,6 @@ export default function Auth({ onLogin }) {
   return (
     <div className="auth card">
       <h2>{mode === 'login' ? t('login') : t('register')}</h2>
-
       <form onSubmit={submit}>
         <input
           placeholder={t('usernamePlaceholder')}
@@ -61,7 +65,6 @@ export default function Auth({ onLogin }) {
           onChange={e => setUsername(e.target.value)}
           required
         />
-
         <input
           placeholder={t('passwordPlaceholder')}
           type="password"
@@ -69,7 +72,6 @@ export default function Auth({ onLogin }) {
           onChange={e => setPassword(e.target.value)}
           required
         />
-
         {mode === 'register' && (
           <div style={{ marginTop: '10px', marginBottom: '10px' }}>
             {recaptchaSiteKey ? (
@@ -82,12 +84,10 @@ export default function Auth({ onLogin }) {
             )}
           </div>
         )}
-
         <button type="submit">
           {mode === 'login' ? t('submitLogin') : t('submitRegister')}
         </button>
       </form>
-
       <p>
         <button type="button" onClick={handleModeSwitch}>
           {t('switchTo', {
@@ -95,7 +95,6 @@ export default function Auth({ onLogin }) {
           })}
         </button>
       </p>
-
       {msg && <p className="msg">{msg}</p>}
     </div>
   );
