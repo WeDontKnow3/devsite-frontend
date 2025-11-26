@@ -19,6 +19,22 @@ import { useTranslation } from 'react-i18next';
 
 let animId = 1;
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+function setCookie(name, value, days = 30) {
+  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Strict`;
+}
+
+function deleteCookie(name) {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Strict`;
+}
+
 export default function App() {
   const { t } = useTranslation();
 
@@ -57,7 +73,10 @@ export default function App() {
   }
 
   useEffect(() => {
-    loadMe();
+    const token = getCookie('token');
+    if (token) {
+      loadMe();
+    }
   }, []);
 
   useEffect(() => {
@@ -68,13 +87,13 @@ export default function App() {
 
   function onLogin(token) {
     if (token) {
-      localStorage.setItem('token', token);
+      setCookie('token', token, 30);
       loadMe();
     }
   }
 
   function onLogout() {
-    localStorage.removeItem('token');
+    deleteCookie('token');
     setUser(null);
     setBalance(null);
     setView('market');
