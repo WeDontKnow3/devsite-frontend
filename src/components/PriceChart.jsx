@@ -143,7 +143,7 @@ export default function PriceChart({ series = [] }) {
 
   if (!useFallback) {
     return (
-      <div ref={outerRef} style={{ width: '100%', overflowX: 'auto' }}>
+      <div ref={outerRef} style={{ width: '100%', overflowX: 'auto', touchAction: 'pan-x' }}>
         <div style={{ width: totalWidth, height: 350, position: 'relative' }}>
           <div ref={containerRef} style={{ width: totalWidth, height: 350 }} />
         </div>
@@ -183,20 +183,23 @@ export default function PriceChart({ series = [] }) {
     return padding.top + (1 - ratio) * innerH;
   }
 
-  function handleMouseMove(e) {
+  function handlePointerMove(e) {
     const rect = e.currentTarget.getBoundingClientRect();
     const scrollLeft = outerRef.current ? outerRef.current.scrollLeft : 0;
-    const mx = e.clientX - rect.left + scrollLeft;
+    const mx = (e.clientX ?? (e.touches && e.touches[0] && e.touches[0].clientX)) - rect.left + scrollLeft;
     const relativeX = mx - padding.left;
     const idx = Math.floor(relativeX / totalCandleWidth);
     if (idx >= 0 && idx < sorted.length) {
-      setHover({ idx, item: sorted[idx], x: padding.left + idx * totalCandleWidth + candleWidth / 2 });
+      const cx = padding.left + idx * totalCandleWidth + candleWidth / 2;
+      setHover({ idx, item: sorted[idx], x: cx });
     } else {
       setHover(null);
     }
   }
 
-  function handleMouseLeave() { setHover(null); }
+  function handlePointerLeave() {
+    setHover(null);
+  }
 
   const ticks = 6;
   const tickVals = Array.from({ length: ticks + 1 }, (_, i) => minP + (i / ticks) * range).reverse();
@@ -204,9 +207,15 @@ export default function PriceChart({ series = [] }) {
   const svgWidth = Math.max(w, Math.ceil(padding.left + sorted.length * totalCandleWidth + padding.right));
 
   return (
-    <div ref={outerRef} style={{ width: '100%', overflowX: 'auto' }}>
+    <div ref={outerRef} style={{ width: '100%', overflowX: 'auto', touchAction: 'pan-x' }}>
       <div style={{ width: svgWidth, height: h, position: 'relative', borderRadius: 8, overflow: 'visible', background: 'linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.003))' }}>
-        <svg width={svgWidth} height={h} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} style={{ display: 'block' }}>
+        <svg
+          width={svgWidth}
+          height={h}
+          onPointerMove={handlePointerMove}
+          onPointerLeave={handlePointerLeave}
+          style={{ display: 'block', touchAction: 'none' }}
+        >
           <g>
             {tickVals.map((v, i) => {
               const ty = padding.top + (i / ticks) * innerH;
@@ -272,7 +281,12 @@ export default function PriceChart({ series = [] }) {
         {hover && (
           <div style={{
             position: 'absolute',
-            left: Math.min(svgWidth - 220, Math.max(15, hover.x - 100)),
+            left: (() => {
+              const scrollLeft = outerRef.current ? outerRef.current.scrollLeft : 0;
+              const screenX = hover.x - scrollLeft;
+              const clamped = Math.min(svgWidth - 220, Math.max(15, screenX - 100));
+              return clamped;
+            })(),
             top: 25,
             background: 'rgba(7, 16, 41, 0.95)',
             color: '#d1e6ff',
